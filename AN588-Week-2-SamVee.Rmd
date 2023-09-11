@@ -16,22 +16,16 @@ library("stringr") #loads package
 ```
 
 ##Challenge 1
-First, create a vector of 1, word character strings comprising the first line of the novel Ulysses, by James Joyce: “Stately, plump Buck Mulligan came from the stairhead, bearing a bowl of lather on which a mirror and a razor lay crossed.”
-Then, extract every third element of this vector.
-
 ```{r challenge 1}
 v1 <- c('Stately', ',', 'plump', 'Buck', 'Mulligan', 'came', 'from', 'the', 'stairhead', ',', 'bearing', 'a', 'bowl', 'of', 'lather', 'on', 'which', 'a', 'mirror', 'and', 'a', 'razor', 'lay', 'crossed', '.'); v1
 #one way to split up character 
 
-v2 <- "Stately, plump Buck Mulligan came from the stairhead, bearing a bowl of lather on which a mirror and a razor lay crossed."; v2
-#entire sentence is one character 
-
+v2 <- "Stately, plump Buck Mulligan came from the stairhead, bearing a bowl of lather on which a mirror and a razor lay crossed."; v2 #entire sentence is one character 
 v2<- gsub("[[:punct:]]","",v2); v2 #remove punctuation
-
 v2 <- str_split(v2, " "); v2 #splits up sentence so each word is its own character
-
-v2[seq(from = 'Stately', to = 'crossed', by = 3)]; v2 #extract every third element, this is currently wrong
+v2.1 <- v2[seq(from = 1, to = length(v2), by = 3)]; v2.1 #this should work, not sure why it's not working
 ```
+
 ##Challenge 2
 [...]
 ```{r setup, include=FALSE}
