@@ -5,6 +5,7 @@ date: "2023-09-11"
 output: html_document
 ---
 
+Ask Chris -- whats the point of github desktop, new repositories from week 2 are not showing up, do i have to clone them or add them?
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
