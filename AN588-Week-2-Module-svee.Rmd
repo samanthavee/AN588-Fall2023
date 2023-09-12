@@ -6,42 +6,12 @@ output: html_document
 ---
 
 ## Preliminaries
-Set working directory
-Install {stringr} package in R
-```{preliminaries}
-setwd("/Users/samanthavee/Documents/Github/AN588-Week-2")
+```{r preliminaries}
+setwd("/Users/samanthavee/Documents/Github/AN588-Week-2") #set wd
 library("stringr") #loads package
 ```
 
-## Matrices and arrays
-```{r}
-m <- matrix(data = c(1, 2, 3, 4), nrow=2, ncol=2); m
-m <- matrix(data=c(1, 2, 3, 4, 5, 6), nrow=2, ncol=3, byrow=FALSE); m
-
-v1 <- c(1, 2, 3, 4)
-v2 <- c(6, 7, 8, 9)
-m1 <- rbind(v1, v2); m1 #bind by row
-m2 <- cbind(v1, v2); m2 #bind by column
-
-class(m1)
-dim(m1) #tells us there's 2 rows and 4 columns
-class(m2)
-dim(m2) #tells us there's 4 rows and 2 columns
-colnames(m2)
-rownames(m2)
-str(m2) #summarizes aspects of data structure
-
-a <- array(data = 1:90, dim = c(5,6,3)); a #5 rows, 6 columns, broken up into 3 sets
-```
-
-## Subsetting 
-```{r}
-v <- 1:100; v #creates vector containing all integers from 1 to 100
-v [1:15] #select first 15 elements
-v[c(2, 4, 6, 8, 10)] #subset specific values
-v <- 101:200 #create vector containing all integers from 101-200
-v[seq(from = 1, to = 100, by = 2)] #create vector starting at 1, ending at 100, count by 2
-```
+### CHALLENGES
 
 ## Challenge 1
 ```{r challenge 1}
@@ -85,6 +55,73 @@ a[1:5, 1:5, 3, 3]
 #returns elements from rows and columns 1:5, aka all elements, of (3,3) matrix
 ```
 
+## Challenge 4
+``` {r challenge 4}
+# list for strepsirrhines
+Lemuroidea <- c("Cheirogaleidae", "Lepilemuridae", "Indriidae", "Lemuridae", "Daubentoniidae")
+Lorisoidea <- c("Lorisidae", "Galagidae")
+Strepsirhini <- list(Lemuroidea, Lorisoidea)
+  names(Strepsirhini) <- list("Lemuroidea", "Lorisoidea")
+Strepsirhini
+
+#list for haplorhines
+Platyrrhini <- c("Cebidae", "Atelidae", "Pitheciidae")
+Catarrhini <- c("Cercopithecidae", "Hylobatidae", "Hominidae")
+Tarsioidea <- c("Tarsiidae")
+
+Anthropoidea <- list(Platyrrhini, Catarrhini)
+  names(Anthropoidea) <- list("Platyrrhini", "Catarrhini")
+Haplorhini <- list(Anthropoidea, Tarsioidea)
+  names(Haplorhini) <- list("Anthropoidea", "Tarsioidea")
+Haplorhini
+
+#list for all primates
+Primates <- list(Haplorhini, Strepsirhini)
+  names(Primates) <- list("Haplorhini", "Strepsirhini")
+Primates
+```
+
+## Challenge 5
+```{r challenge 5}
+m3 <- matrix(data=c(3, 0, 1 ,23, 1, 2, 33, 1, 1, 42, 0, 1, 41, 0, 2), nrow=5, ncol=3, byrow=TRUE); m3
+m3_df <- data.frame(m3); m3_df #coerce matrix to data frame
+m3_df$X2 <- as.logical(m3_df$X2) #coerce second column to be logical-valued
+m3_df$X3 <- as.factor(m3_df$X3) #coerce third column to be factor-valued
+```
+
+<br>
+### MODULE 4 NOTES [working with other data structures]
+
+## Matrices and arrays
+```{r}
+m <- matrix(data = c(1, 2, 3, 4), nrow=2, ncol=2); m
+m <- matrix(data=c(1, 2, 3, 4, 5, 6), nrow=2, ncol=3, byrow=FALSE); m
+
+v1 <- c(1, 2, 3, 4)
+v2 <- c(6, 7, 8, 9)
+m1 <- rbind(v1, v2); m1 #bind by row
+m2 <- cbind(v1, v2); m2 #bind by column
+
+class(m1)
+dim(m1) #tells us there's 2 rows and 4 columns
+class(m2)
+dim(m2) #tells us there's 4 rows and 2 columns
+colnames(m2)
+rownames(m2)
+str(m2) #summarizes aspects of data structure
+
+a <- array(data = 1:90, dim = c(5,6,3)); a #5 rows, 6 columns, broken up into 3 sets
+```
+
+## Subsetting 
+```{r}
+v <- 1:100; v #creates vector containing all integers from 1 to 100
+v [1:15] #select first 15 elements
+v[c(2, 4, 6, 8, 10)] #subset specific values
+v <- 101:200 #create vector containing all integers from 101-200
+v[seq(from = 1, to = 100, by = 2)] #create vector starting at 1, ending at 100, count by 2
+```
+
 ## Overwriting
 ``` {r overwriting}
 m[7,1] <- 564; m 
@@ -116,32 +153,6 @@ str(l) #provides details about 3 elements in list
 names(l) <- c("string", "matrix", "logical"); names(l) #names elements in list
 l$string #specifically calls element named string in list l
 l$matrix[3,5] #calls entry in row 3, column 5 of element named matrix in list l
-```
-
-## Challenge 4
-``` {r challenge 4}
-# list for strepsirrhines
-Lemuroidea <- c("Cheirogaleidae", "Lepilemuridae", "Indriidae", "Lemuridae", "Daubentoniidae")
-Lorisoidea <- c("Lorisidae", "Galagidae")
-Strepsirhini <- list(Lemuroidea, Lorisoidea)
-  names(Strepsirhini) <- list("Lemuroidea", "Lorisoidea")
-Strepsirhini
-
-#list for haplorhines
-Platyrrhini <- c("Cebidae", "Atelidae", "Pitheciidae")
-Catarrhini <- c("Cercopithecidae", "Hylobatidae", "Hominidae")
-Tarsioidea <- c("Tarsiidae")
-
-Anthropoidea <- list(Platyrrhini, Catarrhini)
-  names(Anthropoidea) <- list("Platyrrhini", "Catarrhini")
-Haplorhini <- list(Anthropoidea, Tarsioidea)
-  names(Haplorhini) <- list("Anthropoidea", "Tarsioidea")
-Haplorhini
-
-#list for all primates
-Primates <- list(Haplorhini, Strepsirhini)
-  names(Primates) <- list("Haplorhini", "Strepsirhini")
-Primates
 ```
 
 ## Data frames
@@ -186,10 +197,11 @@ as.factor() #convert character to factor data
 na.rm = TRUE #exclude missing data from calculations
 ```
 
-## Challenge 5
-```{r challenge 5}
-m3 <- matrix(data=c(3, 0, 1 ,23, 1, 2, 33, 1, 1, 42, 0, 1, 41, 0, 2), nrow=5, ncol=3, byrow=TRUE); m3
-m3_df <- data.frame(m3); m3_df #coerce matrix to data frame
-m3_df$X2 <- as.logical(m3_df$X2) #coerce second column to be logical-valued
-m3_df$X3 <- as.factor(m3_df$X3) #coerce third column to be factor-valued
+<br>
+### MODULE 5 NOTES [getting data into R]
+
+## Preliminaries
+```{r preliminaries}
+library(readr, curl, readxl, XLConnect, rdrop2, repmis, )
+install.packages(googledrive, googlesheets4)
 ```
