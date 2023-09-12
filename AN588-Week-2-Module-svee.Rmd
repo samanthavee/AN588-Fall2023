@@ -202,6 +202,32 @@ na.rm = TRUE #exclude missing data from calculations
 
 ## Preliminaries
 ```{r preliminaries}
-library(readr, curl, readxl, XLConnect, rdrop2, repmis, )
-install.packages(googledrive, googlesheets4)
+library(readr, curl, readxl, rdrop2, repmis)
+#install packages google drive and googlesheets4
+#error installing XLConnect
+```
+
+## Loading files
+for reading .csv or .txt files from remote servers like dropbox or github
+```{r load files}
+library(readr, curl)
+
+#for .csv file, using {curl} package
+f <- curl("https://raw.githubusercontent.com/fuzzyatelin/fuzzyatelin.github.io/master/AN588_Fall23/CPDS-1960-2014-reduced.csv")
+d <- read.csv(f, header = TRUE, sep = ",", stringsAsFactors = FALSE)
+head(d)
+
+#for .txt file, using {curl} package
+Sys.setenv(VROOM_CONNECTION_SIZE = 131072 * 2)
+f <- "https://raw.githubusercontent.com/fuzzyatelin/fuzzyatelin.github.io/master/AN588_Fall23/CPDS-1960-2014-reduced.csv"
+d <- read_csv(f, col_names = TRUE)
+head(d)
+
+#importing data from remote server using {readr}
+Sys.setenv(VROOM_CONNECTION_SIZE = 131072 * 2)
+library(readr)
+f <- "https://raw.githubusercontent.com/fuzzyatelin/fuzzyatelin.github.io/master/AN588_Fall23/CPDS-1960-2014-reduced.csv"
+d <- read_csv(f, col_names = TRUE); head(d)
+f <- "https://raw.githubusercontent.com/fuzzyatelin/fuzzyatelin.github.io/master/AN588_Fall23/CPDS-1960-2014-reduced.txt"
+d <- read_tsv(f, col_names = TRUE); head(d)
 ```
