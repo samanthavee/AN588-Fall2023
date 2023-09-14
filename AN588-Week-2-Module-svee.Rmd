@@ -21,7 +21,13 @@ v1 <- c('Stately', ',', 'plump', 'Buck', 'Mulligan', 'came', 'from', 'the', 'sta
 v2 <- "Stately, plump Buck Mulligan came from the stairhead, bearing a bowl of lather on which a mirror and a razor lay crossed."; v2 #entire sentence is one character 
 v2<- gsub("[[:punct:]]","",v2); v2 #remove punctuation
 v2 <- str_split(v2, " "); v2 #splits up sentence so each word is its own character
-v2.1 <- v2[seq(from = 1, to = length(v2), by = 3)]; v2.1 #this should work, not sure why it's not working
+v2.1 <- v2[seq(from = 1, to = length(v2), by = 3)]; v2.1 #this doesn't work because seq doesn't like characters, try again !! 
+
+v2.1 <- str_split(v2, " ") #ignore this sam
+#trying in class below
+#line 18 then remove punctuation
+str_split(v1, "Buck", n=1, simplify = FALSE)
+#or use extract function to extract every third
 ```
 
 ## Challenge 2
@@ -206,7 +212,7 @@ na.rm = TRUE #exclude missing data from calculations
 ```{r prelim 2, eval = FALSE}
 library(readr, curl, readxl, rdrop2, repmis)
 #install packages google drive and googlesheets4
-#error installing XLConnect
+#error installing XLConnect, ignore
 ```
 
 ## Loading files
