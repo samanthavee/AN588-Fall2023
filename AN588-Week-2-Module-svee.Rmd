@@ -5,8 +5,8 @@ date: "2023-09-11"
 output: html_document
 ---
 
-## Preliminaries
-```{r preliminaries}
+## Preliminaries 1
+```{r prelim 1}
 setwd("/Users/samanthavee/Documents/Github/AN588-Week-2") #set wd
 library("stringr") #loads package
 ```
@@ -60,22 +60,23 @@ a[1:5, 1:5, 3, 3]
 # list for strepsirrhines
 Lemuroidea <- c("Cheirogaleidae", "Lepilemuridae", "Indriidae", "Lemuridae", "Daubentoniidae")
 Lorisoidea <- c("Lorisidae", "Galagidae")
-Strepsirhini <- list(Lemuroidea, Lorisoidea)
-  names(Strepsirhini) <- list("Lemuroidea", "Lorisoidea")
-Strepsirhini
+Strepsirhini <- list(Lemuroidea, Lorisoidea) #nesting within streps
+  names(Strepsirhini) <- list("Lemuroidea", "Lorisoidea") #naming the list
+Strepsirhini #final output
 
-#list for haplorhines
+# making lists for haplorhines
 Platyrrhini <- c("Cebidae", "Atelidae", "Pitheciidae")
 Catarrhini <- c("Cercopithecidae", "Hylobatidae", "Hominidae")
 Tarsioidea <- c("Tarsiidae")
 
+# nesting and namining lists for haplorhines
 Anthropoidea <- list(Platyrrhini, Catarrhini)
   names(Anthropoidea) <- list("Platyrrhini", "Catarrhini")
 Haplorhini <- list(Anthropoidea, Tarsioidea)
   names(Haplorhini) <- list("Anthropoidea", "Tarsioidea")
 Haplorhini
 
-#list for all primates
+# making final list for all primates
 Primates <- list(Haplorhini, Strepsirhini)
   names(Primates) <- list("Haplorhini", "Strepsirhini")
 Primates
@@ -124,9 +125,10 @@ v[seq(from = 1, to = 100, by = 2)] #create vector starting at 1, ending at 100, 
 
 ## Overwriting
 ``` {r overwriting}
-m[7,1] <- 564; m 
+m <- matrix(data = 1:80, nrow =8, ncol = 10, byrow = FALSE); m #pasting from challenge 2 because i don't think r knew what matrix i was calling when i tried to knit, "subscript out of bounds error"
+m[7, 1] <- 564; m
 # replaces value (7) in row 7, column 1 with value 564
-m[,8] <- 2; m 
+m[, 8] <- 2; m 
 # replaces all values in column 8 with value 2
 m[2:5, 4:8] <- 1; m 
 # replaces all values in rows 2-5, columns 4-8 with value 1
@@ -135,7 +137,7 @@ m[2:5, 4:8] <- c(20, 19, 18, 17); m
 m[2:5, 4:8] <- matrix(data = c(20:1), nrow = 4, ncol = 5, byrow = TRUE); m 
 # same as previous but replaced with descending values 20 to 1
 # byrow = TRUE fills matrices by row, default is byrow = TRUE which fills matrices by column
-m[,8] <- c("a", "b"); m 
+m[, 8] <- c("a", "b"); m 
 #replaces values in column 8 with alternating "a" and "b" characters
 ```
 
@@ -191,7 +193,7 @@ new_df <- df[df$school == "BU", c("name.last", "name.first", "school")]; new_df 
 ```
 
 ## Factors, conversion and coercion, and special data values
-``` {r factors and etc}
+``` {r factors and etc, eval = FALSE}
 as.character() #convert factor to character data
 as.factor() #convert character to factor data
 na.rm = TRUE #exclude missing data from calculations
@@ -200,8 +202,8 @@ na.rm = TRUE #exclude missing data from calculations
 <br>
 ### MODULE 5 NOTES [getting data into R]
 
-## Preliminaries
-```{r preliminaries}
+## Preliminaries 2
+```{r prelim 2, eval = FALSE}
 library(readr, curl, readxl, rdrop2, repmis)
 #install packages google drive and googlesheets4
 #error installing XLConnect
@@ -209,7 +211,7 @@ library(readr, curl, readxl, rdrop2, repmis)
 
 ## Loading files
 for reading .csv or .txt files from remote servers like dropbox or github
-```{r load files}
+```{r load files, eval = FALSE}
 library(readr, curl)
 
 #for .csv file, using {curl} package
