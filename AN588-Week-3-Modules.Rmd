@@ -1,0 +1,256 @@
+---
+title: "AN588-Week-3-Modules"
+author: "Samantha Vee"
+date: "2023-09-17"
+output: html_document
+---
+# Module 06: Exploratory Data Analysis
+
+## Preliminaries
+```{r prelim}
+# set working directory
+setwd("/Users/samanthavee/Documents/GitHub/AN588-Fall2023")
+
+# load tidyverse
+library(ggplot2)
+library(dplyr)
+library(curl)
+```
+
+## Challenge 1
+```{r challenge 1}
+# load country dataset into data frame variable d and summarize variables in that data frame
+d <- read.csv("Country-Data-2016.csv", header = TRUE, sep = ",", stringsAsFactors = FALSE)
+head(d)
+summary(d)
+names(d)
+
+# what are the median area and population size of all countries in the dataset?
+# median area is 69700 and median population size is 4.912e+06, used summary(d) to look 
+
+# create a new pop_density variable in your data frame which is population/area
+d$pop_density <- d$population/d$area #use $ to call specific variables, use d$pop_density to put pop_density variable in dataset "d"
+
+# what are the 10 most dense countries?
+d <- d[order(-d$pop_density), ] #orders population density from greatest to least
+d[1:10, ] #shows 10 most dense countries: Macau, Monaco, Holy See, Singapore, Hong Kong, Gibraltar, Bahrain, Maldives, Malta, Bermuda
+
+# what are the 10 least dense countries?
+d <- d[order(d$pop_density), ] #orders population density from least to greatest
+d[1:10, ] #shows 10 least dense countries: South Georgia, Greenland, Falkland Islands, Pitcairn Islands, Mongolia, Western Sahara, French Guiana, Namibia, Australia, Iceland
+
+# extract data from the 20 largest countries into a new variable
+d <- d[order(-d$area), ] #ordering from greatest to least
+d[1:20, ] #extracting top 20
+country <- d[1:20, ] 
+
+# what are the median area and population size of these countries?
+summary(country) #median area is 2553320 and median population size is 4.343e+07
+
+# extract data from all countries beginning with letters A through F
+new <- d[grep("^[A-F]", d$country), ]
+
+# what are the mean area and population size of these countries?
+summary(new) #mean area is 918248 and mean population size is 3.507e+07
+```
+
+## Challenge 2
+Boxplots visually represent 5-number summary plus outliers
+Barplots are useful for crude data because bar height is proportional to value of variable
+```{r challenge 2}
+# make boxplots of the raw population and area data, then do the same after log() transforming variables
+par(mfrow = c(2,3)) #par() command sets grid of panels for plotting, created 2 rows and 3 columns here
+boxplot(d$population)
+boxplot(d$area)
+boxplot(log(d$population)) #log-transformed
+boxplot(log(d$area))
+barplot(d$population)
+barplot(d$area)
+```
+
+## Challenge 3
+Histograms show complete empirical distribution of data in binned categories
+This is useful for checking skewness of the data, symmetry, multimodality, etc.
+* Note that freq=FALSE argument scales y-axis to represent proportion of observations per bin rather than count
+```{r challenge 3 histogram}
+# make histograms of log-transformed population and area data. see what happens if you set freq=FALSE vs freq=TRUE
+par(mfrow = c(2,2))
+hist(log(d$population), freq = TRUE, col = "red", main = "LogPopFreqT",
+      xlab = "log(popsize)", ylab = "density")
+hist(log(d$population), freq = FALSE, col = "red", main = "LogPopFreqF",
+      xlab = "log(popsize)", ylab = "density", ylim = c(0, 0.2))
+hist(log(d$area), freq = TRUE, col = "blue", main = "LogAreaFreqT",
+      xlab = "log(area)", ylab = "density")
+hist(log(d$area), freq = FALSE, col = "blue", main = "LogAreaFreqF",
+      xlab = "log(area)", ylab = "density", ylim = c(0, 0.2))
+  # removed ylim from those with freq=TRUE because histograms came out botched, cannot have 0.2 as upper limit for density count
+```
+
+Density plots compute non-parametric estimate of distribution of variable, can overlay on histogram
+```{r challenge 3 density plot}
+par(mfrow = c(1, 1))  # set up one panel and redraw the log(population) histogram
+hist(log(d$population), freq = FALSE, col = "white", main = "Plot with Mean and Density",
+    xlab = "log(population size)", ylab = "density", ylim = c(0, 0.2))
+abline(v = mean(log(d$population), na.rm = TRUE), col = "blue") #superimpose mean line over histogram
+lines(density(log(d$population), na.rm = TRUE), col = "green") #superimpose density line over histogram
+```
+
+## Challenge 4
+table() function can be used to summarize counts and proportions for categorical variables in dataset
+use this function to find most common form of government in country dataset
+```{r challenge 4}
+sort(table(d$govt_form), decreasing = TRUE)
+# use sort and decreasing function to get most common forms
+# nesting table within sort summarizes counts for govt_form variable
+```
+
+## Challenge 5
+```{r challenge 5a}
+# read in dataset kamilarandcooper and explore data
+kamilar <- read.csv("KamilarAndCooperData.csv", header = TRUE, stringsAsFactors = FALSE)
+attach(kamilar)
+head(kamilar)
+summary(kamilar)
+```
+
+Make boxplots of log(female body mass) ~ family
+```{r challenge 5b}
+# can use {base} graphics
+boxplot(log(Body_mass_female_mean) ~ Family, kamilar) # '~' can be read as by, family put on x-axis
+
+# can also plot with {ggplot2}
+p <- ggplot(data = kamilar, aes(x = Family, y = log(Body_mass_female_mean))) #defining variables in most simple version of this plot
+p <- p + geom_boxplot() #graphs in boxplot
+p <- p + theme(axis.text.x = element_text(angle = 90))  #put x-axis names at 90deg
+p <- p + ylab("log(Female Body Mass)")  #rename y-axis title
+p
+
+# alternatively, add them all together in single line
+p <- ggplot(data = kamilar, aes(x = Family, y = log(Body_mass_female_mean))) + geom_boxplot() + 
+    theme(axis.text.x = element_text(angle = 90)) + ylab("log(Female Body Mass"); p
+```
+
+## Challenge 6
+Scatterplots help visualize 2 continuous variables
+```{r challenge 6}
+# use kamilar dataset to plot the relationship between female body size and female brain size, plot again with log transformed variables
+attach(kamilar)
+par(mfrow = c(1,2)) #1 row and 2 columns
+plot(x = Body_mass_female_mean, y = Brain_Size_Female_Mean)
+plot(x = log(Body_mass_female_mean), y = log(Brain_Size_Female_Mean))
+detach(kamilar)
+
+#making the same plot with ggplot
+p <- ggplot(data = kamilar, aes(x = log(Body_mass_female_mean), y = log(Brain_Size_Female_Mean),
+    color = factor(Family)))  # build a plot object and color points by Family, diff color for each family
+p <- p + xlab("log(Female Body Mass)") + ylab("log(Female Brain Size)")  # then add axis labels
+p <- p + geom_point()  # then we make a scatterplot with this function
+p <- p + theme(legend.position = "bottom", legend.title = element_blank())  # puts legend at bottom without a title
+p  
+
+#set up grid for faceting by grouping variable
+p <- p + facet_wrap(~Family, ncol = 4) #to show scatter plot for each family in dataset instead of combining them
+p <- p + theme(legend.position = "none") #removing legend
+p <- p + geom_smooth(method = "lm", fullrange = TRUE) #adding linear model regression line to each plot
+p
+```
+
+## Challenge 7
+```{r challenge 7}
+# building a bivariate scatterplot using same dataset! 
+p <- ggplot(data = kamilar, aes(x = log(Body_mass_female_mean), y = log(MaxLongevity_m)))
+p <- p + geom_point()
+p <- p + geom_smooth(method = "lm")
+p
+```
+Aggregate statistics and {dyplyr} package
+```{r challenge 7b}
+# calculating summary statistics for group of observations in data frame, can use aggregate() function from standard {stats} package
+aggregate(kamilar$Body_mass_female_mean ~ kamilar$Family, FUN = "mean", na.rm = TRUE) #FUN gives mean female body mass grouped by family
+
+# alternatively:
+aggregate(x = kamilar["Body_mass_female_mean"], by = kamilar["Family"], FUN = "mean", na.rm = TRUE)
+
+# easier to use package {dyplr} to summarize data
+library(dplyr)
+
+# example: filter data belonging to family hominidae WITH mass dimorphism greater than 2
+s <- filter(kamilar, Family == "Hominidae" & Mass_Dimorphism > 2); head(s)
+
+# example: rearrange data frame, orders rows by values of selected columns
+s <- arrange(kamilar, Family, Genus, Body_mass_male_mean); head(s)
+
+# example: selecting specific variables from dataset and importing into new data 's'
+s <- select(kamilar, Family, Genus, Body_mass_male_mean); head(s)
+
+# example: renaming column from Body_mass_female_mean to Female_Mass
+s <- rename(kamilar, Female_Mass = Body_mass_female_mean); head(s$Female_Mass)
+
+# example: adding a new column with combined genus and species names 
+s <- mutate(kamilar, Binomial = paste(Genus, Species, sep = " ")); head(s$Binomial)
+
+# can also summarize better than standard aggregate() function
+s <- summarise(kamilar, avgF = mean(Body_mass_female_mean, na.rm = TRUE), avgM = mean(Body_mass_male_mean,
+    na.rm = TRUE)); s #this is giving us mean of mean body mass for female and male
+
+# grouping data with this function instead of using aggregate()
+byFamily <- group_by(kamilar, Family); byFamily
+s <- summarise(byFamily, avgF = mean(Body_mass_female_mean, na.rm = TRUE), avgM = mean(Body_mass_male_mean,
+    na.rm = TRUE)); s
+```
+Piping
+```{r challenge 7c piping}
+s <-                                                             #to create dataframe "s"
+  kamilar %>%                                                    #take dataframe "kamilar"
+  group_by(Family) %>%                                           #Group it by Family
+  summarise(avgF = mean(Body_mass_female_mean, na.rm=TRUE),      #And calculate mean male BM
+            avgM = mean(Body_mass_male_mean, na.rm=TRUE))        #And mean female BM
+s
+```
+
+## Challenge 8
+```{r challenge 8}
+s <- 
+    kamilar %>%
+    mutate(Binomial = paste(Genus, Species, sep = " ")) %>%  #add variable binomial to dataframe, which combines genus and species
+    select(Binomial, Family, Body_mass_female_mean, Body_mass_male_mean, Mass_Dimorphism) %>%  #trim data to only include these variables
+    group_by(Binomial) %>%  #group these by binomial
+    summarise(avgF = mean(Body_mass_female_mean, na.rm = TRUE),
+              avgM = mean(Body_mass_male_mean, na.rm = TRUE),
+              avgDimorph = mean(Mass_Dimorphism, na.rm = TRUE)) #calculate avg value for these variables
+s
+
+#Acccording to Kamilar & Cooper’s (2013) dataset, what is the average male and female size, and body mass dimorphism of my two main study species (vervet monkeys, Chlorocebus pygerythrus; and woolly monkeys, Lagothrix lagotricha)? Which has a larger average female body mass? Which is more sexually dimorphic?
+
+vervet <- 
+    kamilar %>%
+    select(Scientific_Name, Body_mass_female_mean, Body_mass_male_mean, Mass_Dimorphism) %>%
+    filter(Scientific_Name == "Chlorocebus_pygerythrus") %>%
+    summarise(avgF = mean(Body_mass_female_mean, na.rm = TRUE),
+              avgM = mean(Body_mass_male_mean, na.rm = TRUE),
+              avgDimorph = mean(Mass_Dimorphism, na.rm = TRUE)); vervet
+# avgF 3575.8, avgM 5071.2, avgDimorph 1.418 -- more sexually dimorphic
+
+woolly <- 
+    kamilar %>%
+    select(Scientific_Name, Body_mass_female_mean, Body_mass_male_mean, Mass_Dimorphism) %>%
+    filter(Scientific_Name == "Lagothrix_lagotricha") %>%
+    summarise(avgF = mean(Body_mass_female_mean, na.rm = TRUE),
+              avgM = mean(Body_mass_male_mean, na.rm = TRUE),
+              avgDimorph = mean(Mass_Dimorphism, na.rm = TRUE)); woolly
+# avgF 7020, avgM 7280, avgDimorph 1.037 -- larger avg female body mass
+# need to figure out a way to combine vervet and woolly monkeys into same filter function if possible
+# update, you can do this: filter(Scientific_Name == "Chlorocebus_pygerythrus" | Scientific_Name == "Lagothrix_lagotricha)
+
+
+#Compare the body size of my two main study taxa at the Family level (i.e., Cercopithecidae vs. Atelidae) by plotting (using {ggplot2}) the body mass of males and females and sexual dimorphism. If you can, make the Cercopithecid boxes green, and the Atelid boxes purple.
+
+data <-
+    kamilar %>%
+    select(Family, Body_mass_female_mean, Body_mass_male_mean, Mass_Dimorphism) %>%
+    filter(Family == "Cercopithecidae" | Family == "Atelidae"); data
+
+plot <- ggplot(data = bodysize, aes()) #best way to visualize this? 
+
+```
+Something here
