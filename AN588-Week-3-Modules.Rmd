@@ -3,10 +3,15 @@ title: "AN588-Week-3-Modules"
 author: "Samantha Vee"
 date: "2023-09-17"
 output: html_document
+editor_options: 
+  markdown: 
+    wrap: 72
 ---
+
 # Module 06: Exploratory Data Analysis
 
 ## Preliminaries
+
 ```{r prelim}
 # set working directory
 setwd("/Users/samanthavee/Documents/GitHub/AN588-Fall2023")
@@ -18,15 +23,17 @@ library(curl)
 ```
 
 ## Challenge 1
+
 ```{r challenge 1}
 # load country dataset into data frame variable d and summarize variables in that data frame
 d <- read.csv("Country-Data-2016.csv", header = TRUE, sep = ",", stringsAsFactors = FALSE)
-head(d)
-summary(d)
-names(d)
+head(d) #give first 6 lines of data
+summary(d) #summaries of each column in the dataset, output diff depending on column format
+names(d) #prints out all variable names
 
 # what are the median area and population size of all countries in the dataset?
-# median area is 69700 and median population size is 4.912e+06, used summary(d) to look 
+summary(d)
+# median area is 69700 and median population size is 4.912e+06
 
 # create a new pop_density variable in your data frame which is population/area
 d$pop_density <- d$population/d$area #use $ to call specific variables, use d$pop_density to put pop_density variable in dataset "d"
@@ -47,16 +54,21 @@ country <- d[1:20, ]
 # what are the median area and population size of these countries?
 summary(country) #median area is 2553320 and median population size is 4.343e+07
 
+# grep is used to extract specific info from a dataset, handy for searching
 # extract data from all countries beginning with letters A through F
 new <- d[grep("^[A-F]", d$country), ]
+# in dataframe d, use grep to search for something beginning w/ letters A-F in column country
 
 # what are the mean area and population size of these countries?
 summary(new) #mean area is 918248 and mean population size is 3.507e+07
 ```
 
 ## Challenge 2
-Boxplots visually represent 5-number summary plus outliers
-Barplots are useful for crude data because bar height is proportional to value of variable
+
+Boxplots visually represent 5-number summary plus outliers Barplots are
+useful for crude data because bar height is proportional to value of
+variable
+
 ```{r challenge 2}
 # make boxplots of the raw population and area data, then do the same after log() transforming variables
 par(mfrow = c(2,3)) #par() command sets grid of panels for plotting, created 2 rows and 3 columns here
@@ -69,9 +81,12 @@ barplot(d$area)
 ```
 
 ## Challenge 3
-Histograms show complete empirical distribution of data in binned categories
-This is useful for checking skewness of the data, symmetry, multimodality, etc.
-* Note that freq=FALSE argument scales y-axis to represent proportion of observations per bin rather than count
+
+Histograms show complete empirical distribution of data in binned
+categories This is useful for checking skewness of the data, symmetry,
+multimodality, etc. \* Note that freq=FALSE argument scales y-axis to
+represent proportion of observations per bin rather than count
+
 ```{r challenge 3 histogram}
 # make histograms of log-transformed population and area data. see what happens if you set freq=FALSE vs freq=TRUE
 par(mfrow = c(2,2))
@@ -86,7 +101,9 @@ hist(log(d$area), freq = FALSE, col = "blue", main = "LogAreaFreqF",
   # removed ylim from those with freq=TRUE because histograms came out botched, cannot have 0.2 as upper limit for density count
 ```
 
-Density plots compute non-parametric estimate of distribution of variable, can overlay on histogram
+Density plots compute non-parametric estimate of distribution of
+variable, can overlay on histogram, essentially smoothing out histogram
+
 ```{r challenge 3 density plot}
 par(mfrow = c(1, 1))  # set up one panel and redraw the log(population) histogram
 hist(log(d$population), freq = FALSE, col = "white", main = "Plot with Mean and Density",
@@ -96,8 +113,11 @@ lines(density(log(d$population), na.rm = TRUE), col = "green") #superimpose dens
 ```
 
 ## Challenge 4
-table() function can be used to summarize counts and proportions for categorical variables in dataset
-use this function to find most common form of government in country dataset
+
+table() function can be used to summarize counts and proportions for
+categorical variables in dataset use this function to find most common
+form of government in country dataset [republic]
+
 ```{r challenge 4}
 sort(table(d$govt_form), decreasing = TRUE)
 # use sort and decreasing function to get most common forms
@@ -105,6 +125,7 @@ sort(table(d$govt_form), decreasing = TRUE)
 ```
 
 ## Challenge 5
+
 ```{r challenge 5a}
 # read in dataset kamilarandcooper and explore data
 kamilar <- read.csv("KamilarAndCooperData.csv", header = TRUE, stringsAsFactors = FALSE)
@@ -113,7 +134,8 @@ head(kamilar)
 summary(kamilar)
 ```
 
-Make boxplots of log(female body mass) ~ family
+Make boxplots of log(female body mass) \~ family
+
 ```{r challenge 5b}
 # can use {base} graphics
 boxplot(log(Body_mass_female_mean) ~ Family, kamilar) # '~' can be read as by, family put on x-axis
@@ -131,13 +153,15 @@ p <- ggplot(data = kamilar, aes(x = Family, y = log(Body_mass_female_mean))) + g
 ```
 
 ## Challenge 6
+
 Scatterplots help visualize 2 continuous variables
+
 ```{r challenge 6}
 # use kamilar dataset to plot the relationship between female body size and female brain size, plot again with log transformed variables
 attach(kamilar)
 par(mfrow = c(1,2)) #1 row and 2 columns
 plot(x = Body_mass_female_mean, y = Brain_Size_Female_Mean)
-plot(x = log(Body_mass_female_mean), y = log(Brain_Size_Female_Mean))
+plot(x = log(Body_mass_female_mean), y = log(Brain_Size_Female_Mean)) #note difference between 2 plots
 detach(kamilar)
 
 #making the same plot with ggplot
@@ -145,7 +169,7 @@ p <- ggplot(data = kamilar, aes(x = log(Body_mass_female_mean), y = log(Brain_Si
     color = factor(Family)))  # build a plot object and color points by Family, diff color for each family
 p <- p + xlab("log(Female Body Mass)") + ylab("log(Female Brain Size)")  # then add axis labels
 p <- p + geom_point()  # then we make a scatterplot with this function
-p <- p + theme(legend.position = "bottom", legend.title = element_blank())  # puts legend at bottom without a title
+p <- p + theme(legend.position = "bottom", legend.title = element_blank())  # puts legend at bottom without title
 p  
 
 #set up grid for faceting by grouping variable
@@ -156,6 +180,7 @@ p
 ```
 
 ## Challenge 7
+
 ```{r challenge 7}
 # building a bivariate scatterplot using same dataset! 
 p <- ggplot(data = kamilar, aes(x = log(Body_mass_female_mean), y = log(MaxLongevity_m)))
@@ -163,7 +188,9 @@ p <- p + geom_point()
 p <- p + geom_smooth(method = "lm")
 p
 ```
+
 Aggregate statistics and {dyplyr} package
+
 ```{r challenge 7b}
 # calculating summary statistics for group of observations in data frame, can use aggregate() function from standard {stats} package
 aggregate(kamilar$Body_mass_female_mean ~ kamilar$Family, FUN = "mean", na.rm = TRUE) #FUN gives mean female body mass grouped by family
@@ -198,7 +225,9 @@ byFamily <- group_by(kamilar, Family); byFamily
 s <- summarise(byFamily, avgF = mean(Body_mass_female_mean, na.rm = TRUE), avgM = mean(Body_mass_male_mean,
     na.rm = TRUE)); s
 ```
+
 Piping
+
 ```{r challenge 7c piping}
 s <-                                                             #to create dataframe "s"
   kamilar %>%                                                    #take dataframe "kamilar"
@@ -209,6 +238,7 @@ s
 ```
 
 ## Challenge 8
+
 ```{r challenge 8}
 s <- 
     kamilar %>%
@@ -218,7 +248,6 @@ s <-
     summarise(avgF = mean(Body_mass_female_mean, na.rm = TRUE),
               avgM = mean(Body_mass_male_mean, na.rm = TRUE),
               avgDimorph = mean(Mass_Dimorphism, na.rm = TRUE)) #calculate avg value for these variables
-s
 
 #Acccording to Kamilar & Cooper’s (2013) dataset, what is the average male and female size, and body mass dimorphism of my two main study species (vervet monkeys, Chlorocebus pygerythrus; and woolly monkeys, Lagothrix lagotricha)? Which has a larger average female body mass? Which is more sexually dimorphic?
 
@@ -240,17 +269,284 @@ woolly <-
               avgDimorph = mean(Mass_Dimorphism, na.rm = TRUE)); woolly
 # avgF 7020, avgM 7280, avgDimorph 1.037 -- larger avg female body mass
 # need to figure out a way to combine vervet and woolly monkeys into same filter function if possible
-# update, you can do this: filter(Scientific_Name == "Chlorocebus_pygerythrus" | Scientific_Name == "Lagothrix_lagotricha)
 
 
 #Compare the body size of my two main study taxa at the Family level (i.e., Cercopithecidae vs. Atelidae) by plotting (using {ggplot2}) the body mass of males and females and sexual dimorphism. If you can, make the Cercopithecid boxes green, and the Atelid boxes purple.
 
-data <-
+library(egg) #load package to arrange ggplot figures
+
+bodysize <-
     kamilar %>%
     select(Family, Body_mass_female_mean, Body_mass_male_mean, Mass_Dimorphism) %>%
-    filter(Family == "Cercopithecidae" | Family == "Atelidae"); data
+    filter(Family == "Cercopithecidae" | Family == "Atelidae"); bodysize
 
-plot <- ggplot(data = bodysize, aes()) #best way to visualize this? 
+plot_mass_female <- ggplot(data = bodysize, 
+                           aes(x = Family, y = Body_mass_female_mean, fill = Family)) 
+                           geom_boxplot(na.rm = TRUE, show.legend = FALSE) +
+                           xlab("Family") + ylab("Mean Female Body Mass") +
+                           scale_fill_manual(values = c("purple", "green"))
+
+plot_mass_male <- ggplot(data = bodysize, 
+                         aes(x = Family, y = Body_mass_male_mean, fill = Family)) +
+                         geom_boxplot(na.rm = TRUE, show.legend = FALSE) +
+                         xlab("Family") + ylab("Mean Male Body Mass") +
+                         scale_fill_manual(values = c("purple", "green"))
+
+plot_dimorphism <- ggplot(data = bodysize, 
+                          aes(x = Family, y = Mass_Dimorphism, fill = Family)) +
+                          geom_boxplot(na.rm = TRUE, show.legend = FALSE) + 
+                          xlab("Family") + ylab("Mass Dimorphism") +
+                          scale_fill_manual(values = c("purple", "green"))
+
+ggarrange(plot_mass_female, plot_mass_male, plot_dimorphism, ncol=3, nrow=1)
 
 ```
-Something here
+
+------------------------------------------------------------------------
+
+# Module 07: Central Tendency and Variance
+
+## Preliminaries
+
+```{r prelim2}
+library("sciplot")
+```
+
+Important terms \* parameter = measurable characteristic of a POPULATION
+\* statistic = measurable characteristic of a SAMPLE \* harmonic mean =
+reciprocal of avg of reciprocals of a set of values \* geometric mean =
+measure of central tendency for multiplicative processes rather than
+additive the nth root of the product of values
+
+When to use these measures of central tendency? need to explore data first and think about nature of data
+reciprocals, fractions, rates -- harmonic mean
+exponential growth -- geometric mean
+but think through it! when are these tools useful?
+
+## Challenge 1
+
+```{r module 7 challenge 1}
+# given this vector:
+x <- c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 25, 50, 100, 200, 1000)
+
+# write a function to determine the geometric mean of the values in a vector
+gm1 <- function(x) {prod(x)^(1/length(x))} #product of everything in x to 1/n, same as taking sq root of prod(x)
+gm1(x)
+
+gm2 <- function(x) {exp(mean(log(x)))} #this does the same thing
+gm2(x)
+```
+
+Geometric mean: special type of average where we multiply numbers
+together and take sq rt, cube rt, etc. \* This is useful for data
+dealing with things like exponential population growth, etc.
+
+Note that general form for functions is: function name \<-
+function(arguments to pass) {code to run}
+
+How to measure spread or variability in a dataset? \* Can characterize
+in terms of deviation from the mean -- sum of squares \* sum of squares
+= sum of squared deviations of set of values from mean + use squared
+deviations (geometric mean?) because sum of deviations would equal 0
+
+## Challenge 2
+
+Can calculate sum of squares by 1) subtracting mean from data points, 2)
+squaring the difference, 3) adding them together
+
+```{r module 7 challenge 2a}
+# write a function to calculate the sum of squares for a vector 
+ss1 <- function(x) {sum((x - mean(x))^2)}
+ss1(x)
+
+# another way
+ss2 <- function(x) {sum(x^2) - length(x) * mean(x)^2}
+ss2(x)
+
+# another way; (sum of sq values in dataset) - (sq of summed values/n)
+ss3 <- function(x) {sum(x^2) - (sum(x))^2/length(x)}
+ss3(x)
+```
+
+Population variance = sum of sq/n \* this tells us mean squared
+deviation in a population, dividing sum of squares by n Sample variance
+= sum of sq/(n-1) \* use this when you only have a sample and are making
+inferences about overall population variance
+
+```{r module 7 challenge 2b}
+# calculating population variance
+pop_v <- function(x) {sum((x-mean(x))^2)/(length(x))}
+pop_v(x)
+```
+
+## Challenge 3
+
+Write a function to calculate the variance for a vector of values
+representing a sample of measurements. Compare the results of your
+function to the built-in function, var(), which calculates sample
+variance. \* Sample variance = sum of sq/(n-1) \* use this when you only
+have a sample and are making inferences about overall population
+variance
+
+```{r challenge 3}
+# calculating sample variance
+samp_v <- function(x) {sum((x-mean(x))^2)/(length(x)-1)}
+samp_v(x)
+
+# compare to built in function var()
+var(x) #same output as prior code
+```
+
+Interesting questions to ask: 1. How does sample variance compare to
+population variance? What happens to sample variance as sample size
+increases? Population variance requires all data while sample variance
+only requires a proportion. As sample size increases, sample variance
+will decrease. This is because you're dividing by sample size (n), as n
+increases, your variance will decrease. 2. For a random variable, how is
+variance related to sample size? [see below]
+
+```{r interesting questions}
+# set up a plot
+plot(c(0, 50), c(0, 15), type = "n", xlab = "Sample size", ylab = "Variance")
+
+#create random variable drawn from normal distribution using rnorm() function
+for (n in seq(5, 50, 5)) # samples of 5, 10, 15... for (n in seq(5, 50,
+{
+    for (i in 1:50) # 50 replicates for (i in 1:50) # 50 replicates
+    {
+        x <- rnorm(n, mean = 10, sd = 2)
+        points(n, var(x))
+    }
+}
+
+# future sam - look into for loops, check required readings
+```
+
+Standard deviation is the square root of the variance!
+
+```{r sd}
+# SD of population variance
+pop_sd <- function(x) {sqrt(pop_v(x))}
+pop_sd(x)
+
+# SD of sample variance
+sample_sd <- function(x) {sqrt(samp_v(x))}
+sample_sd(x)
+
+# can also use built-in R function sd()
+sd(x) #this gives sample SD
+```
+
+## Challenge 4
+
+Using measures of spread \* we want to know how unreliable our estimates
+of population parameters from samples are \* would expect error to
+increase with increased variation in the sample \* would expect error to
+decrease with increased sample size
+
+Standard error of the mean aka SE mean: 1. sq rt avg sample variance 2.
+sq rt (sample variance/number observations) 3. (sample SD)/sq rt (number
+observations)
+
+Write a function to calculate the standard error of the mean for a
+vector of values representing a sample of measurements. You can use
+either your own function for sample variance or the built-in var()
+function
+
+```{r challenge 4}
+SE1 <- function(x) {sqrt(sample_v(x)/length(x))} #uses method 2
+SE1(x)
+
+SE2 <- function(x) {sqrt(var(x)/length(x))} #uses method 2 but with var() function
+SE2(x)
+
+#this package contains the function se() for calculating SE
+library(sciplot)
+se(x)
+```
+
+## Calculating confidence intervals using SE
+
+Confidence intervals = likely range of values in which an estimate would
+fall if the sampling exercise would be repeated
+
+```{r CI using SE}
+set.seed(1)
+x <- rnorm(10000, 0, 1) # sample 10000 numbers from normal distribution with mean=0, SD=1
+hist(x)
+
+#plotting density and probability distributions for a normal distribution
+x <- seq(from = -4, to = 4, by = 0.01)
+#cex sets size of points being plotted, dnorm provides density of normal distribution at spec quantile
+plot(x, dnorm(x), cex = 0.4) 
+plot(x, pnorm(x), cex = 0.4) #cumulative density of normal distribution at spec quantile
+
+x <- seq(from = 0, to = 1, by = 0.01)
+plot(qnorm(x), x, cex = 0.4) #quantile of normal distribution at spec cumulative density
+
+# returning to CIs, suppose we have this vector
+x <- c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15)
+m <- mean(x)
+n <- length(x)
+v <- var(x)
+s <- sd(x)
+e <- sqrt(v/n)
+upper <- mean(x) + qnorm(0.975, mean = 0, sd = 1) * se(x)
+lower <- mean(x) + qnorm(0.025, mean = 0, sd = 1) * se(x)  # or lower <- mean(x) - qnorm(0.975)*se(x)
+ci <- c(lower, upper)
+ci
+
+# how to interpret output: based on this data (mean, var, sample size), we are 95% confident that the true mean of the population is between these bounds OR a repeated sample from the same distribution is expected to fall into this interval 95% of the time
+```
+
+## Calculating confidence intervals by bootstrapping
+
+Can also create CI by simulating/bootstrapping - not making assumptions
+about underlying distribution from which random variable is drawn
+
+```{r CI bootstrapping}
+set <- NULL  # sets up a dummy variable to hold our 10000 simulations
+n <- 15
+for (i in 1:10000) {
+    set[i] <- mean(sample(x, n, replace = TRUE)) # sample w/ replacement 15 numbers from vector 10k times
+}
+quantile(set) #returns observations satisfying nth quantile, default 0/25/50/75/100
+quantile(set, c(0.025, 0.975)) #specifying 2.5% and 97.5%
+```
+
+Challenge 5
+
+```{r challenge 5}
+# How does the CI calculated this way, by simulation, compare to that calculated based on assuming a normal distribution?
+
+##Results are roughly similar (?)
+  
+# How does the width of the CI change with decreasing or increasing n (the number of observations drawn from your sample with replacement)? For example, if we set n at 5? At 50? At 500?
+set <- NULL  
+n <- 5
+for (i in 1:10000) {
+    set[i] <- mean(sample(x, n, replace = TRUE)) 
+}
+quantile(set) #0% 1.6 - 100% 14.4
+
+set <- NULL  
+n <- 50
+for (i in 1:10000) {
+    set[i] <- mean(sample(x, n, replace = TRUE)) 
+}
+quantile(set) #0% 5.64 - 100% 10.72
+
+set <- NULL 
+n <- 500
+for (i in 1:10000) {
+    set[i] <- mean(sample(x, n, replace = TRUE))
+}
+quantile(set) #0% 7.1 - 100% 8.758
+
+#width of CI becomes more narrow as n increases -- why? 
+```
+
+Sam to-do \* watch a youtube video on central tendency and variance, this module made me feel dumb \*
+understand how for-loops work \* understand qnorm vs pnorm vs dnorm and
+why plots look different for each \* challenge 5 -- figure out why CI
+width becomes more narrow as n increases
