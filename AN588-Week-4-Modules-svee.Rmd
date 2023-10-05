@@ -1,0 +1,491 @@
+---
+title: "AN588-Week-4-Modules-svee"
+author: "Samantha Vee"
+date: "2023-09-30"
+output: html_document
+---
+# Preliminaries
+```{r prelim}
+# set working directory
+setwd("~/Documents/GitHub/AN588-Fall2023")
+
+# load relevant packages
+library(curl)
+```
+
+# MODULE 9: INTRO TO STATISTICAL INFERENCE
+
+## Standard errors and confidence intervals
+
+We define confidence intervals based on data by: statistic +/- critical value x standard error of statistic
+
+* critical value comes from standardized version of sampling distribution corresponding to quantile limits we're interested in [ex. for 95% CI around mean, critical value corresponds to the range of quantiles above and below which we expect to see 5% of distribution of statistic values]
+
+* standard error - SD of sampling distribution
+
+```{r module 8 review}
+# create vector containing 1000 random numbers selected from a normal distribution with mean 3.5 and SD 4
+n <- 1000
+mu <- 3.5
+sigma <- 4
+v <- rnorm(n, mu, sigma)
+
+# calculate mean, SD, standard error of mean (SEM) based on sample of 30 observations drawn from vector
+s <- sample(v, size = 30, replace = FALSE)
+m <- mean(s); m
+sd <- sd(s); sd
+sem <- sd(s)/sqrt(length(s)); sem
+
+# use normal distirbution to characterize quantiles associated with 95% of distribution to define upper and lower bounds of 95% CI
+lower <- m - qnorm(1 - 0.05/2) * sem  # (1-alpha)/2 each in the upper and lower tails of the distribution
+upper <- m + qnorm(1 - 0.05/2) * sem  
+ci <- c(lower, upper); ci
+```
+
+## Central Limit Theorem (CLT)
+Distribution of averages of independent and identically distributed random variables becomes normal as sample size increases
+We can assume normality for distribution of sample mean, as long as samples are independent and large enough
+CLT allows us to make inferences about a population based on a sample! 
+```{r clt1}
+# example - take lots of avgs of samples from a nonnormal distribution and look at their distribution
+lambda <- 14
+n <- 10 # taking samples of n=10 from this population
+pop_se <- sqrt(lambda/n); pop_se  # the estimated SE
+
+x <- NULL
+for (i in 1:1000) {
+    x[i] <- mean(rpois(n = n, lambda = lambda)) # taking 1000 random samples of n=10, calculating avg of each sample
+}
+hist(x, breaks = seq(from = lambda - 4 * sqrt(lambda)/sqrt(n), to = lambda +
+    4 * sqrt(lambda)/sqrt(n), length.out = 20), probability = TRUE) # making histogram of averages of each sample taken
+
+sd <- sd(x); sd
+
+qqnorm(x)
+qqline(x)
+```
+
+Doing the same for samples of size 100, lambda is still 14 -> mean stays the same, distribution is still normal, but SD becomes lower (spread of sampling distribution is lower)
+```{r clt2}
+n <- 100
+pop_se <- sqrt(lambda/n); pop_se  # the estimated SE
+
+x <- NULL
+for (i in 1:1000) {
+    x[i] <- mean(rpois(n = n, lambda = lambda)) # taking 1000 random samples of n=10, calculating avg of each sample
+}
+hist(x, breaks = seq(from = lambda - 4 * sqrt(lambda)/sqrt(n), to = lambda +
+    4 * sqrt(lambda)/sqrt(n), length.out = 20), probability = TRUE) # making histogram of averages of each sample taken
+
+sd <- sd(x); sd
+
+qqnorm(x)
+qqline(x)
+```
+
+We can convert these distributions to standard normals by subtracting the expected population mean (lambda) and dividing the SEM, then plotting histogram of those values along with a normal curve
+```{r clt3}
+# still looks normally distributed! 
+curve(dnorm(x, 0, 1), -4, 4, ylim = c(0, 0.8))
+z <- (x - lambda)/pop_se
+hist(z, breaks = seq(from = -4, to = 4, length.out = 20), probability = TRUE,
+    add = TRUE)
+```
+
+### Take home points about CLT
+1. Regardless of underlying distribution, the distribution of means based on large number of independent identically distributed variables will be approximately normal and will be centered at population mean and will have SD roughly equal to SEM
+2. Taking mean and adding/subtracting standard normal quantile x SE yields confidence interval for mean -- widens as coverage increases and shrinks with less variability or larger sample size
+3. As sample size increases, SEM decreases and distribution becomes more normal
+
+## Confidence Intervals for Sample Proportions
+Taking a similar approach as above, we can generate confidence intervals for variability in the proportion of successes across trials
+* the expectation for proportion of successes is the average number of successes across multiple trials (pi)
+* expected sampling distribution for proportion of successes is normally centered at pi, SD is estimated by sqrt(pi(1-pi)/n)
+* we can estimate pi as phat = x/n
+
+### Challenge
+Suppose a polling group in the Massachusetts is interested in the proportion of voting-age citizens in their state that already know they will vote for Elizabeth Warren in the upcoming November 5, 2024 general elections. The group obtains a yes or no answer from 1000 suitable randomly selected individuals. Of these individuals, 856 say they know they’ll vote for Senator Warren. How would we characterize the mean and variability associated with this proportion?
+```{r challenge}
+n <- 1000 # sampling 1000 randomly selected individuals
+x <- 856 # from the sample of 1000, 856 said they'd vote for Warren
+phat <- x/n; phat  # our estimate of pi
+
+# check if n*pi and n*(1-pi) are >5 - the above expectations only hold true is these are greater than ~5
+n*phat
+n*(1-phat)
+
+# population standard error
+pop_se <- sqrt((phat) * (1 - phat)/n); pop_se
+
+# what is the 95% CI around estimate of proportion of people who already know how they will vote?
+curve(dnorm(x, mean = phat, sd = pop_se), phat - 4 * pop_se, phat + 4 * pop_se)
+upper <- phat + qnorm(0.975) * pop_se
+lower <- phat - qnorm(0.975) * pop_se
+ci <- c(lower, upper)
+polygon(cbind(c(ci[1], seq(from = ci[1], to = ci[2], length.out = 1000), ci[2]),
+    c(0, dnorm(seq(from = ci[1], to = ci[2], length.out = 1000), mean = phat,
+        sd = pop_se), 0)), border = "black", col = "gray")
+abline(v = ci)
+abline(h = 0)
+```
+
+## Small Sample Confidence Intervals
+We can create a CI based on the CLT and normal distribution. Intervals look like:
+mean +/- Z (quantile from standard normal curve) * standard error of the mean
+
+But when sample size is small (n<30), the t-distribution is better than normal distribution for calculating CIs
+- t distribution is continuous probability distribution, used when dealing with statistics that are estimated from a sample rather than a population
+- they can look like normal distributions! 
+- type of t-distribution to use depends on the df (number of individual components in calculation of given statistics that are free to change)
+    - as df increases, the t distribution approaches the normal curve
+    - as df decreases, the tails of the distribution get fatter
+    
+CIs based on t-distribution are of the form: mean +/- T (quantile from t distribution) * standard error of the mean
+- standard normal distribution: normalize sample by subtracting population mean from each observation, then dividing differences by population SD
+    - (mean(x)-μ)/σ
+- standard t-distribution: subtract population mean from each observation, then dividing differences by standard error of mean (SEM)
+    - (mean(x)-μ)/SEM
+    - doing this instead of dividing by population SD accounts for sample size
+    
+```{r t-distribution example}
+# plotting a standard normal distribution and t-distribution with varying degrees of freedom (using df argument)
+mu <- 0
+sigma <- 1
+curve(dnorm(x, mu, 1), mu - 4 * sigma, mu + 4 * sigma, main = "Normal Curve=red\nStudent's t=blue",
+    xlab = "x", ylab = "f(x)", col = "red", lwd = 3)
+for (i in c(1, 2, 3, 4, 5, 10, 20, 100)) { # varying degrees of freedom
+    curve(dt(x, df = i), mu - 4 * sigma, mu + 4 * sigma, main = "T Curve", xlab = "x",
+        ylab = "f(x)", add = TRUE, col = "blue", lty = 5)
+}
+```
+
+Fatter tails of t-distribution lead to more extreme quantile values given specific probability that we would see for normal distribution
+If we define CI based on quantiles of t-distribution, they will be correspondingly wider than those based on normal distribution for small values of df
+```{r t-distribution sample size 30}
+# recall that above, we estimated 95% CI for sample drawn from normal distribution
+n <- 1e+05
+mu <- 3.5
+sigma <- 4
+x <- rnorm(n, mu, sigma)
+sample_size <- 30
+s <- sample(x, size = sample_size, replace = FALSE)
+m <- mean(s); m
+sd <- sd(s); sd
+sem <- sd(s)/sqrt(length(s)); sem
+lower <- m - qnorm(1 - 0.05/2) * sem  # (1-alpha)/2 each in the upper and lower tails of the distribution
+upper <- m + qnorm(1 - 0.05/2) * sem 
+ci_norm <- c(lower, upper); ci_norm
+
+# now look at CIs calculated based on t-distribution for same sample size -- negligible difference for same sample size of 30
+lower <- m - qt(1 - 0.05/2, df = sample_size - 1) * sem  # (1-alpha)/2 each in the upper and lower tails of the distribution
+upper <- m + qt(1 - 0.05/2, df = sample_size - 1) * sem  
+ci_t <- c(lower, upper); ci_t
+```
+
+Now try sample size of 5 instead -- see how the CI based on the t-distribution becomes much wider! But there was not much of a difference before when sample size was bigger
+```{r t-distribution sample size 5}
+sample_size <- 5
+s <- sample(x, size = sample_size, replace = FALSE)
+m <- mean(s); m
+sd <- sd(s); sd
+sem <- sd(s)/sqrt(length(s)); sem
+lower <- m - qnorm(1 - 0.05/2) * sem  # (1-alpha)/2 each in the upper and lower tails of the distribution
+upper <- m + qnorm(1 - 0.05/2) * sem  
+ci_norm <- c(lower, upper); ci_norm
+lower <- m - qt(1 - 0.05/2, df = sample_size - 1) * sem  # (1-alpha)/2 each in the upper and lower tails of the distribution
+upper <- m + qt(1 - 0.05/2, df = sample_size - 1) * sem  
+ci_t <- c(lower, upper); ci_t
+```
+
+## Additional resources
+Khan Academy video on CLT: https://www.youtube.com/watch?v=JNm3M9cqWyc 
+Normal distribution vs t-distribution: https://www.youtube.com/watch?v=xcKKL3-bwss 
+
+# MODULE 10: CLASSICAL HYPOTHESIS TESTING
+Null hypothesis: sample statistic showing no deviation from what is expected or neutral
+Alternative hypothesis: sample statistic deviates more than expected by chance from what's expected or neutral
+
+We typically calculate a test statistic based on data, which is compared to some appropriate standardized sampling distribution to yield a p-value (probability of obtaining test statistic that is high/higher than calculated by chance, assuming null hypothesis is true)
+
+Test statistic is determined by:
+  1) difference between original sample statistic and expected null value
+  2) standard error of sample statistic
+  
+How to calculate p-value? specify test statistic (e.g. mean), specify null distribution (e.g. poisson), then calculate tail probability or probability of obtaining a statistic as more extreme than observed if assuming null distribution
+
+## Testing sample means: one sample Z and T tests
+One sample test - evaluating whether mean of a single set of observations is significantly different than expected under null hypothesis [comparing sample mean to null mean and seeing if they are significantly diff]
+
+Suppose we have a vector describing the adult weights of vervet monkeys trapped in South Africa during the 2016 trapping season. We have the sense they are heavier than vervets we trapped in previous years, which averaged 4.9 kilograms. The mean is 5.324 kilograms. Is the mean significantly greater than our expectation?
+  - Null: mean adult weight is not greater than previous years
+  - Alternative: mean adult weight IS greater than previous years
+  - Upper one-tailed test because we're asking if the mean is GREATER than expected under null
+```{r vervet example}
+library(curl)
+f <- curl("https://raw.githubusercontent.com/fuzzyatelin/fuzzyatelin.github.io/master/AN588_Fall23/vervet-weights.csv")
+d <- read.csv(f, header = TRUE, sep = ",", stringsAsFactors = FALSE)
+head(d)
+mean(d$weight)
+
+# calculating mean, SD, and SEM from sample
+mu <- 4.9 # taken from prompt, avg weight of adult vervets from previous years
+x <- d$weight
+m <- mean(x)
+s <- sd(x)
+n <- length(x)
+sem <- s/sqrt(n)
+
+# using z, standardized normal position of sample mean in distribution centered around expected population mean
+z <- (m - mu)/sem; z # z is a quantile, estimated number of SEMs away from population mean that sample falls
+
+# to see if z is significant, we need to calculate probability of seeing deviation from the mean as high or higher than z by chance -- use pnorm function
+p <- 1 - pnorm(z); p
+p <- pnorm(z, lower.tail = FALSE); p
+
+# use t-distribution instead of normal distribution because sample size from population is typically limited, has fatter tails
+p <- 1 - pt(z, df = n - 1); p
+p <- pt(z, df = n - 1, lower.tail = FALSE); p
+
+# use built in r function! provide data and expected population mean (mu) with the test we want to use
+t <- t.test(x = x, mu = mu, alternative = "greater"); t
+
+# can also use the function to calculate CIs based on t-distribution
+t <- t.test(x = x, mu = mu, alternative = "two.sided")
+ci <- t$conf.int; ci
+
+# versus doing it by hand
+lower <- m - qt(1 - 0.05/2, df = n - 1) * sem
+upper <- m + qt(1 - 0.05/2, df = n - 1) * sem
+ci <- c(lower, upper); ci
+
+
+# we can conclude that the 2016 trapping season has vervets whose weights are significantly heavier than average from previous trapping seasons (p < 0.01) -- average from previous seasons falls outside 95% CI for t-distribution based on sample avg from 2016 trapping season
+```
+
+### Challenge 1
+Adult lowland woolly monkeys are reported to have an average body weight of 7.2 kilograms. You are working with an isolated population of woolly monkeys from the Peruvian Andes that you think may be a different species from the lowland form, and you collect a sample of 15 weights from adult individuals at that site. From your sample, you calculate a mean of 6.43 kilograms and a standard deviation of 0.98 kilograms.
+
+Perform a hypothesis test of whether body weights in your population are different from the reported average for lowland woolly monkeys by setting up a “two-tailed” hypothesis, carrying out the analysis, and interpreting the p value (assume the significance level is α=0.05). Your sample is < 30, so you should use the t distribution and do a t test. Do your calculations both by hand and using the t.test() function and confirm that they match.
+```{r challenge 1}
+# load and preview data
+f <- curl("https://raw.githubusercontent.com/fuzzyatelin/fuzzyatelin.github.io/master/AN588_Fall21/woolly-weights.csv")
+d <- read.csv(f, header = TRUE, sep = ",", stringsAsFactors = FALSE)
+head(d)
+
+# calculating by hand
+mu <- 7.2
+x <- d$weight
+m <- mean(x)
+s <- sd(x)
+n <- length(x)
+sem <- s/sqrt(n)
+t <- (m - mu)/sem; t
+
+# calculating using t.test function
+alpha <- 0.05
+crit <- qt(1 - alpha/2, df = n - 1)  # identify critical values
+test <- t < -crit || t > crit  # boolean test as to whether t is larger than the critical value at either tail
+test <- abs(t) > crit
+t.test(x = x, mu = mu, alternative = "two.sided")
+
+# interpreting results: body weight in this population is significantly different, lower?, (p < 0.01) than reported averages for lowland woolly monkeys
+```
+
+## Comparing sample means: two sample Z and T tests
+We can compare two groups of measurements to one another
+  - Null hypothesis is that the difference between the means is 0 (so no difference)
+
+Considerations before testing
+  - Are the samples related? paired (e.g. same individuals before and after) and unpaired/independent (e.g. collecting weight during rainy vs dry season)
+  - Are variances in 2 samples roughly equal? 
+
+### Unequal variance
+Welch's t-test - used when 2 samples are independent and we can't assume variance of 2 samples are equal [see module for equation]
+
+```{r challenge 2 t-test and unequal variance}
+# load and preview file
+f <- curl("https://raw.githubusercontent.com/fuzzyatelin/fuzzyatelin.github.io/master/AN588_Fall23/colobus-weights.csv")
+d <- read.csv(f, header = TRUE, sep = ",", stringsAsFactors = FALSE)
+head(d)
+
+# create 2 vectors, x and y, for male and female weights
+x <- d$weight[d$sex == "male"]
+y <- d$weight[d$sex == "female"]
+
+# plot in boxplots side by side
+par(mfrow = c(1,2))
+boxplot(x, ylim = c(4.5,8), main = "Weight (kg)", xlab = "Males")
+boxplot(y, ylim = c(4.5,8), main = "Weight (kg)", xlab = "Females")
+
+# calculate mean, sd, sample size for males and females
+m1 <- mean(x) # mean for males
+m2 <- mean(y) # mean for females
+mu <- 0 # could leave this out, default argument value is 0
+s1 <- sd(x)
+s2 <- sd(y)
+n1 <- length(x) # sample size
+n2 <- length(y)
+
+# calculate t statistic and test 2 tailed hypothesis that sample means differ
+t <- (m2 - m1 - mu)/sqrt(s2^2/n2 + s1^2/n1); t # using equation for welche's t-test
+alpha <- 0.05
+crit <- qt(1 - alpha/2, df = n - 1); crit  # identify critical values
+test <- t < -crit || t > crit  # boolean test
+test <- abs(t) > crit; test
+
+# we can do the same using the t.test function! 
+t <- t.test(x = x, y = y, mu = 0, alternative = "two.sided"); t
+
+# how to interpret output? p-value is less than .05 so we can reject the NULL and accept the ALTERNATIVE hypothesis 
+# there is a difference in weights between black-white colobus males and females
+```
+
+### Equal variance
+```{r t-test equal variance}
+s <- sqrt((((n1 - 1) * s1^2) + ((n2 - 1) * s2^2))/(n1 + n2 - 2))
+t <- (m2 - m1 - mu)/(sqrt(s^2 * (1/n1 + 1/n2))); t # calculating t-statistic
+df <- n1 + n2 -2; df # calculating df
+
+# instead of doing it manually... same as before but using var.equal function to say there IS equal variance
+t <- t.test(x = x, y = y, mu = 0, var.equal = TRUE, alternative = "two.sided"); t 
+```
+
+How to tell whether variances are equal? 
+```{r variance equal or no}
+# divide larger by smaller and if result is less than 2, you can use pooled variance version of the test
+var(x)/var(y) # greater than 2 so we can't do this for this example
+
+# use var.test() to statistically test ratio of variances
+vt <- var.test(x, y); vt # output tells us ratio of variance significantly differ from one another
+```
+
+### Paired samples
+For a paired sample test, NULL hypothesis is that the mean of individual paired differences between 2 samples (e.g. before and after) is 0
+(in other words, there is no difference between samples)
+
+CHALLENGE 3
+Let’s play with a sample… IQs of individuals taking a certain statistics course before and after a lecture on significance testing. Load in the iqs.csv data file, look at it, plot a barchart of values before and after and construct a paired t test to evaluate the means before and after.
+```{r challenge 3 paired samples}
+# load and preview file
+f <- curl("https://raw.githubusercontent.com/fuzzyatelin/fuzzyatelin.github.io/master/AN588_Fall23/iqs.csv")
+d <- read.csv(f, header = TRUE, sep = ",", stringsAsFactors = FALSE)
+head(d)
+
+# barchart of values before and after
+par(mfrow = c(1, 2))
+boxplot(d$IQ.before, ylim = c(115, 145), main = "IQ", xlab = "Before")
+boxplot(d$IQ.after, ylim = c(115, 145), main = "IQ", xlab = "After")
+
+# construct t-test to evaluate means before and after (by hand)
+x <- d$IQ.before - d$IQ.after # making this to show difference before and after testing
+m <- mean(x)
+mu <- 0  # can leave this out
+s <- sd(x)
+n <- length(x)
+sem <- s/sqrt(n)
+t <- (m - mu)/sem; t
+alpha <- 0.05
+crit <- qt(1 - alpha/2, df = n - 1); crit  # identify critical values
+test <- t < -crit || t > crit; test  # boolean test
+
+# doing the same using t-test function
+t.test(x, df = n - 1, alternative = "two.sided")
+
+# how to interpret results: p-value is greater than .05 so we have to accept the NULL hypothesis that there is no significant difference in IQs before and after
+```
+
+## Testing sample proportions: one-sample Z test
+Sampling distribution of sample means for independent and identically distributed random variables is roughly normal
+Sampling distribution of number of successes 'x' out of 'k' trials is also roughly normally distributed
+If the true population proportion of “successes” is π, then the sampling distribution for the proportion of successes in a sample of size n
+ is expected to be roughly normally distributed with mean = π and standard error = sqrt(π(1−π)/n).
+
+Simulation to show this:
+```{r testing sample proportion}
+# creating a population of 500 1's and 500 0's, where pi-0.5
+pop <- c(rep(0, 500), rep(1, 500))
+pi <- 0.5
+
+# take 1000 random samples of n=10 from population
+x <- NULL
+n <- 10
+for (i in 1:1000) {
+    x[i] <- mean(sample(pop, size = n, replace = FALSE))  # taking the mean of a bunch of 0s and 1s yields the proportion of 1s!
+}
+
+# calculating proportion of 1s in each sample
+m <- mean(x); m
+s <- sd(x); s
+pop_se <- sqrt(pi * (1 - pi)/n); pop_se # the se is an estimate of the sd of sampling distribution
+```
+
+The normal approximation is true as long as n is large enough and not too close to 0 or 1
+
+We can construct z-statistics for proportions like we constructed Z and T statistics for means and test those proportions for differences from an expected value or for difference between two sample proportions
+
+Z statistic = (observed statistic - expected statistic)/standard error
+
+### Challenge 4
+A neotropical ornithologist working in the western Amazon deploys 30 mist nets in a 100 hectare (ha) grid. She monitors the nets on one morning and records whether or not a she captures any birds in the net (i.e., a “success” or “failure” for every net during a netting session). 
+
+Her netting success over the previous three seasons suggests that she should catch birds in 80% of her nets. This season, she feels, her success rate is lower than in previous years. Does her trapping data support this hypothesis?
+  - NULL: no difference in netting success rate
+  - ALTERNATIVE: significant difference in netting success rate
+```{r challenge 4 z statistic}
+# here are her netting results:
+v <- c(0, 1, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 1, 1, 0, 0, 1, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1)
+
+# are both n*pi and n*(1-pi) greater than 5? we use this to check if the normal distribution is true
+phat <- mean(v); phat
+pi <- 0.8
+n <- 30 # use length(v) to determine sample size
+z <- (phat - pi)/sqrt(pi * (1 - pi)/30); z
+p <- pnorm(z, lower.tail = TRUE); p # using lower.tail=TRUE argument because we're testing a lower tailed one-tailed hypothesis, trying to see if success rate is LOWER
+
+# can estimate 95% CI based on normal distribution as follows
+lower <- phat - qnorm(0.975) * sqrt(phat * (1 - phat)/30)
+upper <- phat + qnorm(0.975) * sqrt(phat * (1 - phat)/30)
+ci <- c(lower, upper); ci
+
+# do the same test with r function [1 sample proportions test without continuity correction]
+pt <- prop.test(x = sum(v), n = length(v), p = 0.8, conf.level = 0.95, correct = FALSE, alternative = "less"); pt
+
+# interpreting results; significant p-value so we can accept alternative hypothesis, there is a difference in netting success this year
+```
+
+## Comparing sample proportions: two sample z-tests
+Also a two sample test for comparing proportions, similar to that for comparing means
+
+### Challenge 5
+A biologist studying two species of tropical bats captures females of both species in a mist net over the course of week of nightly netting. For each species, the researcher records whether females are lactating or not. 
+Based on your mist netting data, do the species differ significantly in the proportion of lactating females during this trapping season? 
+  - NULL - species don't differ in proportion of lactating females
+  - ALTERNATIVE - species do differ in proportion of lactating females
+```{r challenge 5 two sample z test}
+# the vectors below summarize data for each bat species
+v1 <- c(1, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0)
+v2 <- c(1, 1, 0, 0, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 0, 1, 1, 0, 1, 1, 1)
+
+# calculating by hand
+pstar <- (sum(v1) + sum(v2))/(length(v1) + length(v2)); pstar # calculating pooled proportion
+phat1 <- mean(v1); phat1 # proportion of successes in each sample group
+phat2 <- mean(v2); phat2
+pi <- 0 # expected difference in proportion between sample group, usually set to 0 bc this is what we're trying to test
+z <- (phat2 - phat1)/sqrt((pstar * (1 - pstar)) * (1/length(v1) + 1/length(v2))); z # equation for z statistic
+p <- 1 - pnorm(z, lower.tail = TRUE) + pnorm(z, lower.tail = FALSE); p
+crit <- qnorm(1 - alpha/2); crit  # identify critical values
+test <- p < -crit || p > crit; test  # boolean test
+
+# can do this in one line using prop.test function again
+pt <- prop.test(x = c(sum(v2), sum(v1)), n = c(length(v2), length(v1)), alternative = "two.sided", correct = FALSE); pt
+
+# interpreting results: p-value is not significant, we can accept null hypothesis - there is no difference in proportion of lactating females across species
+```
+
+## Summary of z and t-tests
+Both are used to evaluate whether a given sample statistic deviates significantly from what's expected under a null model or whether 2 sample statistics deviate significantly from one another
+
+They are used for normally distributed, continuous variables or those that can be approximated closely by normal distribution
+  - Reject null hypothesis is p-value for a given test statistic is less than alpha
+  - Use Z quantiles for calculating CIs and p values if sample size is greater than 30
+  - Use T quantiles " " " if sample size is less than 30

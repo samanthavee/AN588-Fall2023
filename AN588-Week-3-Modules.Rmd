@@ -419,6 +419,7 @@ for (n in seq(5, 50, 5)) # samples of 5, 10, 15... for (n in seq(5, 50,
     }
 }
 
+# note that in the output plot, the variance becomes more constrained as sample size increases
 # future sam - look into for loops, check required readings
 ```
 
