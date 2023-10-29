@@ -1,0 +1,282 @@
+---
+title: "AN588-Week-7-Module-svee"
+author: "Samantha Vee"
+date: "2023-10-15"
+output: html_document
+---
+# Module 7: Elements of Regression Analysis
+
+# Preliminaries
+```{r prelim}
+# set working directory
+setwd("~/Documents/GitHub/AN588-Fall2023")
+
+# load packages
+library(curl)
+library(car)
+
+# load data
+f <- curl("https://raw.githubusercontent.com/fuzzyatelin/fuzzyatelin.github.io/master/AN588_Fall23/zombies.csv")
+d <- read.csv(f, header = TRUE, sep = ",", stringsAsFactors = FALSE)
+```
+
+# Analysis of variance and ANOVA tables
+
+In our linear models, we can partition total variation in our y variable (the sum of squares of y, or SSY) into that explained by our model (the regression sum of squares, or SSR) and that which is left over as “error” (the error sum of squares, or SSE): SSY = SSR + SSE
+
+Run a straightforward regression model and, using the raw data (duplicated in $model data structure within model object)
+Calculate the various sums of squares of variables and identify the df associated with each source of variation. 
+This allows us to generate the ANOVA table for our model, which summarizes how variance is partitioned among different sources.
+```{r run regression model}
+# run bivariate regression model 
+m <- lm(data = d, height ~ weight)
+```
+
+Use raw data to calculate sums of squares
+```{r sums of sq}
+# SSY = total variation in y-variable = SSR + SSE
+SSY <- sum((m$model$height - mean(m$model$height))^2); SSY  # height - mean(height)
+
+# SSR = total variation explained by model
+SSR <- sum((m$fitted.values - mean(m$model$height))^2); SSR  # predicted height - mean height
+
+# SSE = error of sum of squares or how much variation is left over as error
+SSE <- sum((m$model$height - m$fitted.values)^2); SSE  # height - predicted height
+```
+
+From here, we can calculate the variance in each of these components (mean square) by dividing each sum of squares by its corresponding df (recall that a variance can be thought of as an average “sum of squares”).
+- Df for regression sum of squares (SSR) = number of predictor variables, which in this case is one (given our regression equation, we need to know only one piece of information, value of predictor variable, to calculate predicted value of response variable). 
+- Df for error sum of squares (SSE) is equal to n−2 because we need to estimate 2 parameters (β0 and β1) from data before we can calculate error sum of squares. 
+- Df for the total sum of squares (SSY) is n−1; need to estimate one parameter from data (the mean value of y) before calculating  SSY.
+```{r mean square}
+# determine degrees of freedom
+df_regression <- 1
+df_error <- 998 # n = 1000, df = n-2
+df_y <- 999 # n = 100, df = n-1
+
+# calculate variance or mean square by dividing sum of squares by corresponding df
+MSR <- SSR/df_regression
+MSE <- SSE/df_error
+MSY <- SSY/df_y
+```
+
+Last thing is F ratio [ratio of variance explained by regression model to remaining, unexplained variance] MSR/MSE
+```{r f-ratio}
+fratio <- MSR/MSE; fratio
+```
+
+Test overall significance of regression model by evaluating F-ratio test statistic against F-distribution, accounting for df in each. 
+- F distribution is continuous probability distribution, defined for x≥0 and governed by 2 parameters: df1, df2
+- The critical value above which we would reject idea that variance in two sources is comparable is given by qf(p,df1,df2)
+    - p = 1-α
+    - df1, df2 are degrees of freedom in sources being compared (regression vs error)
+```{r test significance}
+curve(df(x, df = 1, df2 = 1), col = "green", lty = 3, lwd = 2, xlim = c(0, 10),
+    main = "Some Example F Distributions\n(vertical line shows critical value for df1=1,df2=998)",
+    ylab = "f(x)", xlab = "x")
+curve(df(x, df = 2, df2 = 2), col = "blue", lty = 3, lwd = 2, add = TRUE)
+curve(df(x, df = 4, df2 = 4), col = "red", lty = 3, lwd = 2, add = TRUE)
+curve(df(x, df = 8, df2 = 6), col = "purple", lty = 3, lwd = 2, add = TRUE)
+curve(df(x, df = 1, df2 = 998), col = "black", lwd = 3, add = TRUE)
+legend("top", c("df1=1,df2=1", "df1=2,df2=2", "df1=4,df2=4", "df1=8,df2=6",
+    "df1=1,df2=998"), lty = 3, lwd = 2, col = c("green", "blue", "red", "purple",
+    "black"), bty = "n", cex = 0.75)
+
+fcrit <- qf(p = 0.95, df1 = 1, df2 = 998); fcrit
+
+abline(v = fcrit)
+abline(h = 0)
+polygon(cbind(c(fcrit, seq(from = fcrit, to = 10, length.out = 1000), 8), c(0,
+    df(seq(from = fcrit, to = 8, length.out = 1000), df1 = 1, df2 = 998), 0)),
+    border = "black", col = "grey")
+```
+value for the F ratio well exceeds this critical value
+
+Alternatively, we can use this formulation to directly estimate p-value associated with F-ratio value
+```{r easier way}
+# see how p-value is 0, pretty much nothing when F-ratio value is this high
+1 - pf(q = fratio, df1 = 1, df2 = 998)
+
+# R can handle all above calculations easily with a built-in aov() function
+a <- aov(data = d, height ~ weight); summary(a)
+
+# can get the same thing with summary.aov(m) using model object resulting from lm()
+summary.aov(m)
+```
+
+Recall that results returned by summary() of regression model also shows coefficient of determination (R-squared value) = fraction of the total variation explained by the model. 
+- Can directly calculate this value from ANOVA table as SSR/SSY
+- The correlation coefficient, ρ, between response and predictor variable is the square root of this value.
+```{r r sq value and correlation coefficient}
+rsquared <- SSR/SSY; rsquared
+rho <- sqrt(rsquared); rho
+```
+
+# Standard errors of regression coefficients
+Recall that lm() returned standard errors associated with each component of regression model (slope, intercept, each predicted value of y)
+- We can calculate standard errors directly to show how R is deriving them
+- Formula for standard error of the regression slope, β1, = sqrt(MSE/SSX)
+```{r standard error}
+SSX <- sum((m$model$weight - mean(m$model$weight))^2)
+
+# formula for standard error of the regression slope: β1 = sqrt(MSE/SSX)
+SEbeta1 <- sqrt(MSE/SSX); SEbeta1
+
+# formula for standard error of intercept slope: β0 = sqrt((MSE x sum model weight^2)/(n*SSX))
+SEbeta0 <- sqrt((MSE * sum(m$model$weight^2))/(1000 * SSX)); SEbeta0
+
+# formula for standard error of each predicted value of y is:
+SEyhat <- sqrt(MSE * (1/1000 + (m$model$weight - mean(m$model$weight))^2/SSX))
+head(SEyhat)  # just the first 6 rows
+
+# again, these same standard errors for β0 and β1 match what's returned by lm() function
+summary(m)
+```
+
+# Model checking
+We still haven't checked our model fit critically in other ways - we haven’t seen whether two assumptions of linear modeling are met: 
+- 1) residuals (or errors) are normally distributed
+- 2) there is constancy of variance in y values across range of x's.
+
+We can investigate our residuals as one way of assessing model fit
+
+## Challenge 1
+Calculate residuals from regression of zombie height on weight, plot these in relation to weight (x-variable)
+```{r challenge 1}
+# one way
+m <- lm(data = d, height ~ weight)
+plot(x = d$weight, y = m$residuals)
+
+# another way (same output)
+e <- resid(m)
+plot(x = d$weight, y = e)
+
+# plot histogram of residuals - they should ideally be normally distributed
+hist(e, xlim = c(-4 * sd(e), 4 * sd(e)), breaks = 20, main = "Histogram of Residuals") # yes, looks good
+```
+
+Can also use plot() function with model as argument; this prints out 4 plots that each tell you something
+```{r plot function}
+par(mfrow = c(2, 2))
+plot(m$model$weight, m$residuals)
+plot(m)
+```
+
+- First plot of fitted values () versus residuals should, like the plot of x versus residuals, not show any structure. We hope to see equally spread residuals around a horizontal line without distinct patterns. 
+- Second plot is Q-Q plot of theoretical quantiles vs standardized quantiles for the residual values. These should fall on roughly a straight line, if the residuals are normally distributed. 
+- Third plot graphs the square root of the standardized residuals vs x and shows whether or not residuals are spread equally along ranges of x's. Good if you see horizontal line with equally spread points rather than a decrease or increase in spread with x, which would indicate that error variance increases/decreases with x.
+- Fourth plot highlights whether there are particular observations that influence the results. In particular, we look to see if there are cases that fall in the upper or lower right portion of the plot.
+
+Can also do a QQ plot of our residuals:
+```{r qqplot residuals}
+qqnorm(m$residuals)
+```
+
+Or use {car} package - the qqPlot() function provides a trend line and confidence intervals that allow us to see exactly which points make the sample fall outside of normality (if any)
+```{r car package}
+qqPlot(m$residuals)
+```
+
+Finally, there are many tests for normality that we can run within R framework and using other packages. 
+- Shapiro-Wilk Normality Test is most widely used, where a low p value would indicate deviation from normality (technically, a measure of how far the trend line of the residuals deviates from the qqplot line)
+- There are also other tests for normality (Anderson-Darling, Kolmogoriv-Smirnov, etc.) and are best used in specific cases! SEE MODULE
+```{r popular tests for normality}
+# although there are some points at the higher quantiles that suggest non-normality, the Shapiro-Wilks test suggests that it’s not quite non-normal, so our use of parametric statistics should be ok.
+
+s <- shapiro.test(m$residuals); s
+```
+**Remaining question: what is considered low vs high p-value? what cutoff are we using, 0.05?
+
+## Challenge 2
+Load in the “KamilarAndCooper.csv” dataset and develop a linear model to look at the relationship between “weaning age” and “female body mass”. You will probably need to look at the data and variable names again to find the appropriate variables to examine.
+```{r}
+# load data
+f <- curl("https://raw.githubusercontent.com/fuzzyatelin/fuzzyatelin.github.io/master/AN588_Fall23/KamilarAndCooperData.csv")
+d <- read.csv(f, header = TRUE, sep = ",", stringsAsFactors = FALSE)
+head(d)
+
+# look at plot for weaning age vs female body mass and develop linear model
+plot(data = d, WeaningAge_d ~ Body_mass_female_mean)
+
+# develop linear model to look at weaning age vs female body mass
+model <- lm(data = d, WeaningAge_d ~ Body_mass_female_mean)
+summary(model)
+```
+
+Using the procedures outlined above and in Module 12, calculate estimates of β0 and β1 by hand *and using the lm() function. Are the regression coefficients estimated under a simple linear model statistically significantly different from zero?
+- To get to β0 and β1, we first need to calculate the following:
+```{r}
+# first need sums of squares
+SSY <- sum((model$model$WeaningAge_d - mean(model$model$WeaningAge_d))^2); SSY  # height - mean(height)
+SSR <- sum((model$fitted.values - mean(model$model$WeaningAge_d))^2); SSR  # predicted height - mean height
+SSE <- sum((model$model$WeaningAge_d - model$fitted.values)^2); SSE  # height - predicted height
+
+# then need degrees of freedom
+df_regression <- 1
+df_error <- 211 # n = 213, df = n-2
+df_y <- 212 # n = 213, df = n-1
+
+# calculate variance or mean square by dividing sum of squares by corresponding df
+MSR <- SSR/df_regression; MSR
+MSE <- SSE/df_error; MSE
+MSY <- SSY/df_y; MSY
+
+# calculate standard error
+SSX <- sum((model$model$WeaningAge_d - mean(model$model$WeaningAge_d))^2)
+
+# formula for standard error of the regression slope: β1 = sqrt(MSE/SSX)
+SEbeta1 <- sqrt(MSE/SSX); SEbeta1
+
+# formula for standard error of intercept slope: β0 = sqrt((MSE x sum model weight^2)/(n*SSX))
+SEbeta0 <- sqrt((MSE * sum(model$model$WeaningAge_d^2))/(213 * SSX)); SEbeta0
+```
+**This doesn't match lm model, figure out why
+
+Construct an ANOVA table by hand and compare your values to the results of running lm() and then looking at summary.aov(lm())
+```{r}
+# see above
+
+# calculate fratio
+fratio <- MSR/MSE; fratio
+```
+
+Generate the residuals for your linear model by hand, plot them in relation to female body weight, and make a histogram of the residuals. Do they appear to be normally distributed?
+```{r}
+a <- aov(data = d, WeaningAge_d ~ Body_mass_female_mean)
+summary(a)
+summary.aov(m)
+```
+
+Run the plot() command on the result of lm() and examine the 4 plots produced. Again, based on examination of the residuals and the results of Shapiro-Wilks test, does it look like your model has good fit?
+```{r}
+plot(model)
+qqPlot(model$residuals)
+s <- shapiro.test(model$residuals); s
+```
+** Does it look like model has good fit? I don't think so but check previous example to make sure
+
+# Data transformations
+For linear regression modeling to be appropriate, two conditions need to be met: 
+[1] variables (and error variance in variables) should be normally distributed
+[2] should be homogeneity of variance in response variable around range of predictor variable.
+
+In many cases, these conditions may not be met… for example, the continuous metric data we have may not, in fact, be normally distributed. Which data points are pushing this dataset into non-normality? Can we justify their exclusion to achieve normality if we’re interested in understanding life history variation in the realtionship between female body size and age at weaning? Thankfully, we can often apply some kind of mathematical transformation to our data to change their distribution to more closely approximate the normal without excluding what may initially appear to be outliers.
+
+The logarithmic/“log” transformation (where we take log value of each data point) is often applied to positive numeric variables with heavy skew to dramatically reduce overall range of data and bring extreme observations closer to measure of centrality. The logarithm for a number is power to which you must raise a base value (e.g., e, the natural log) to obtain that number. This is an example of a “power transformation”, other examples of which include square root transformation and reciprocal (or multiplicative inverse) transformation.
+
+## Challenge 3
+Return to the “KamilarAndCooper.csv” dataset you were looking at above and log transform both of your variables and then run a simple bivariate linear model. Do you notice a difference between these results and those obtained using untransformed variables?
+```{r challenge 3}
+d$logWeaningAge <- log(d$WeaningAge_d)
+d$logFemaleBodyMass <- log(d$Body_mass_female_mean)
+plot(data = d, logWeaningAge ~ logFemaleBodyMass)
+
+model <- lm(data = d, logWeaningAge ~ logFemaleBodyMass)
+summary(model)
+
+plot(model)
+
+qqPlot(model$residuals)
+
+s <- shapiro.test(model$residuals); s
+```

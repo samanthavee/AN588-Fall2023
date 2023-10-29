@@ -288,7 +288,7 @@ test <- t < -crit || t > crit  # boolean test as to whether t is larger than the
 test <- abs(t) > crit
 t.test(x = x, mu = mu, alternative = "two.sided")
 
-# interpreting results: body weight in this population is significantly different, lower?, (p < 0.01) than reported averages for lowland woolly monkeys
+# interpreting results: body weight in this population is significantly different, lower?, (p < 0.01) than reported averages for lowland woolly monkeys -- new species! 
 ```
 
 ## Comparing sample means: two sample Z and T tests
@@ -337,7 +337,7 @@ test <- abs(t) > crit; test
 t <- t.test(x = x, y = y, mu = 0, alternative = "two.sided"); t
 
 # how to interpret output? p-value is less than .05 so we can reject the NULL and accept the ALTERNATIVE hypothesis 
-# there is a difference in weights between black-white colobus males and females
+# there is a significant difference in weights between black-white colobus males and females
 ```
 
 ### Equal variance
@@ -392,6 +392,7 @@ test <- t < -crit || t > crit; test  # boolean test
 t.test(x, df = n - 1, alternative = "two.sided")
 
 # how to interpret results: p-value is greater than .05 so we have to accept the NULL hypothesis that there is no significant difference in IQs before and after
+# mean difference actually fell but not significantly
 ```
 
 ## Testing sample proportions: one-sample Z test
@@ -429,7 +430,7 @@ Z statistic = (observed statistic - expected statistic)/standard error
 A neotropical ornithologist working in the western Amazon deploys 30 mist nets in a 100 hectare (ha) grid. She monitors the nets on one morning and records whether or not a she captures any birds in the net (i.e., a “success” or “failure” for every net during a netting session). 
 
 Her netting success over the previous three seasons suggests that she should catch birds in 80% of her nets. This season, she feels, her success rate is lower than in previous years. Does her trapping data support this hypothesis?
-  - NULL: no difference in netting success rate
+  - NULL: no difference in netting success rate, will be 80% success like previous years, mu is 80%
   - ALTERNATIVE: significant difference in netting success rate
 ```{r challenge 4 z statistic}
 # here are her netting results:
