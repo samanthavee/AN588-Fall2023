@@ -1,0 +1,348 @@
+---
+title: "AN588-Week-10-Modules"
+author: "Samantha Vee"
+date: "2023-11-04"
+output: html_document
+---
+
+# MODULE 16: Model selection in linear regression
+
+## Nested comparisons
+- Use F ratios and partial F tests to compare different models
+- Nested models: larger model that contains explanatory variables we're interested in and smaller, less complex models that exclude one or more variables [compare variance in response variable explained by complex model vs reduced model]
+
+Use zombie data to compare few models. First calculate partial F statistic for full vs reduced model
+```{r nested comparisons}
+library(curl)
+f <- curl("https://raw.githubusercontent.com/fuzzyatelin/fuzzyatelin.github.io/master/AN588_Fall21/zombies.csv")
+z <- read.csv(f, header = TRUE, sep = ",", stringsAsFactors = TRUE)
+m1 <- lm(data = z, height ~ age * gender)  # full model with interactions 
+m2 <- lm(data = z, height ~ age + gender)  # reduced model without interactions
+m3 <- lm(data = z, height ~ age)  # model with one predictor
+m4 <- lm(data = z, height ~ 1)  # intercept only model
+
+# carry out partial F tests to compare particular models using anova() function, with nested (reduced) and full model as arguments
+anova(m2, m1, test = "F")  # compares m2 to m1
+
+# calculate F statistic and compare to F distribution
+f <- ((summary(m1)$r.squared - summary(m2)$r.squared) * (nrow(z) - 3 - 1))/((1 -
+    summary(m1)$r.squared) * (3 - 2)); f
+p <- 1 - pf(f, df1 = 3 - 2, df2 = nrow(z) - 3, lower.tail = TRUE); p  # df1 = q-p, df2 = n-q
+
+# comparing other set of models
+anova(m3, m2, test = "F")  # compares the age only model (m3) to the age + gender model (m2)
+f <- ((summary(m2)$r.squared - summary(m3)$r.squared) * (nrow(z) - 2 - 1))/((1 -
+    summary(m2)$r.squared) * (2 - 1)); f
+p <- 1 - pf(f, df1 = 2 - 1, df2 = nrow(z) - 2, lower.tail = TRUE); p  # df1 = q-p, df2 = n-q
+```
+They show that the more complex model results in significantly more explanatory power than the reduced model
+
+## Forward selection
+- Starts with intercept-only model and tests which predictor variable best improves the goodness of fit, model is then updated by adding term and tests which remaining variables would further/best improve the fit
+- functions add1() performs the tests and update() updates fitted regression model
+- .~. means "what is already there", remainder of argument is list of additional variables you might add for fullest possible model
+```{r forward selection}
+m0 <- lm(data = z, height ~ 1); summary(m0)
+add1(m0, scope = . ~ . + age + weight + zombies_killed + years_of_education, test = "F")
+
+m1 <- update(m0, formula = . ~ . + weight); summary(m1)
+add1(m1, scope = . ~ . + age + weight + zombies_killed + years_of_education, test = "F")
+
+m2 <- update(m1, formula = . ~ . + age); summary(m2)
+add1(m2, scope = . ~ . + age + weight + zombies_killed + years_of_education, test = "F")
+```
+
+After adding weight and age, no other variable improves the model fit significantly. The best model in this case is m2.
+
+## Backward selection
+Opposite to forward selection, backward selection starts with the fullest model you want to consider and systematically drops terms that do not contribute to the explanatory value of the model. The R functions for this process are drop1() to inspect the partial F test results and update() to update the model.
+
+```{r backward selection}
+m0 <- lm(data = z, height ~ age + weight + zombies_killed + years_of_education); summary(m0)
+drop1(m0, test = "F")
+
+m1 <- update(m0, . ~ . - years_of_education)
+summary(m1)
+drop1(m1, test = "F")
+
+m2 <- update(m1, . ~ . - zombies_killed)
+summary(m2)
+drop1(m2, test = "F")
+```
+
+At this point, all of the explanatory variables are still significant, so the final, best model in this case is also m2.
+
+## Model selection using AIC
+- The model with the lowest AIC is typically designated as the best fit for the data.
+- Although AIC can be used to assess the relative fit of a model (compared to other models) to a certain data set, it can’t say anything about the absolute fit of the model
+- The best fit according to AIC (among the models you test against each other) may actually explain very little of the variation.
+
+Let’s try stepAIC() with our m0 from above. In the call for the function, we can ask it to run forward, backward, or both directions.
+```{r AIC}
+library(MASS)
+stepAIC(m0, direction = "both")
+```
+Note that the function has converged (using AIC, in this case), on the same best model – with just age and weight as predictor variables – as our methods above.
+
+Finally, there’s a very helpful model selection package called AICcmodavg. You may have noticed the extra ‘c’ in AICc; this is a corrected version of AIC that can account for small sample sizes (helpful for most of us in Anthropology).
+
+This is, essentially, a version of AIC with greater penalties for models with more parameters. Since the values for AICc and AIC converge as sample size increases, it has been argued that AICc should be the default model testing criterion rather than AIC.
+```{r AICc}
+library(AICcmodavg)
+print(aictab(list(m0, m1, m2), c("m0", "m1", "m2")), LL = FALSE)
+```
+
+# MODULE 17: Generalized Linear Modeling
+
+## Preliminaries
+```{r module 17 prelim}
+# load these packages
+library(curl)
+library(ggplot2)
+library(broom)
+library(lmtest)
+```
+
+## Generalized Linear Models
+Standard linear models assume normally distributed response variables, normally distributed error terms (residuals) from fitted models, and constant variance in response variables across range of predictor variables
+If these assumptions aren't met, we can use "generalized linear modeling" -- uses link function to extend traditional regression models to allow expected value of response variable to depend on predictor variable 
+- allows response variable to belong to any set of distributions belonging to exponential family
+- doesn't require errors/residuals to be normally distributed
+- doesn't require homogeneity of variance across range of predictor variable values
+
+## Model fitting in GLMs
+Commonly done using a maximum likelihood approach - take data as given and find most likely model to fit data, fit of model judged on how likely data would be if model were correct
+- deviance is the measure of discrepancy used in a GLM to assess the goodness of fit of model to the data
+
+### Logistic regression
+Suppose we are interested in how a students’ GRE scores, grade point averages (GPA), and ranking of their undergraduate institution (into quartiles, 1 to 4, from high to low), affect admission into graduate school. The response variable, “admitted/not admitted”, is a binary variable, scored as 1/0.
+
+```{r logistic regression prelim}
+# load data
+f <- curl("https://raw.githubusercontent.com/fuzzyatelin/fuzzyatelin.github.io/master/AN588_Fall21/graddata.csv")
+d <- read.csv(f, header = TRUE, sep = ",")
+head(d)
+summary(d)
+
+# start with exploratory visualization
+par(mfrow = c(1, 2))
+plot(as.factor(d$admit), d$gpa, xlab = "Admit", ylab = "GPA", col = "lightgreen")
+plot(as.factor(d$admit), d$gre, xlab = "Admit", ylab = "GRE", col = "lightblue")
+pairs(d) # wtf is this showing ???
+table(d$admit, d$rank)
+```
+
+To use logistic regression to look at how the odds of admission are influenced by GRE scores, we can call the glm() function with a model where ADMIT is our response variable and GRE is our predictor variable. (does GRE affect grad school admission?)
+```{r GLM logistic regression}
+# output shows us increasing GRE score results in increase in admission
+glm <- glm(data = d, admit ~ gre, family = "binomial") #glm of admit-gre
+summary(glm)
+
+# Using the predict() function, we can plot data and fit the change in the admitted/not admitted ratio across range of GRE scores
+x <- seq(from = min(d$gre), to = max(d$gre), length.out = 1000)
+logOR <- predict(glm, newdata = data.frame(gre = x))  # this function will predict the log(odds ratio)... but if we add the argument type='response', the predict() function will return the expected response on the scale of the Y variable, i.e., Pr(Y)=1, rather than the odds ratio!
+y <- predict(glm, newdata = data.frame(gre = x), type = "response")
+plot(d$admit ~ d$gre, pch = 21, type = "p", xlab = "GRE Score", ylab = "Pr(Y)", main = "Pr(Y) versus GRE")
+lines(y ~ x, type = "l")
+
+# By exponentiating β1, we can get actual odds ratio change (instead of log(odds ratio) change) associated w/ 1 unit change GRE scores.
+ORchange <- exp(glm$coefficients[2])
+ORchange  # a 1 unit increase in gre results in a 0.36% increase in likelihood of admission
+```
+
+Test null hypothesis that regression coefficient B1 is 0 (no relationship between binary response variable and predictor variable)
+1) Calculate Wald statistic for predictor variable and compare to standard normal or z distribution
+```{r wald stat}
+# calculation by hand using tidy() function from {broom} 
+glmresults <- tidy(glm)
+wald <- glmresults$estimate[2]/glmresults$std.error[2]
+p <- 2 * (1 - pnorm(wald)); p  # calculation of 2 tailed p value associated with the Wald statistic
+CI <- confint(glm, level = 0.95); CI  # this function returns a CI based on log-likelihood, an iterative ML process
+CI <- confint.default(glm, level = 0.95); CI  # this function returns CIs based on standard errors, the way we have calculated them by hand previously... note the slight difference
+CI <- glmresults$estimate[2] + c(-1, 1) * qnorm(0.975) * glmresults$std.error[2]  # and this is how we have calculated CIs by hand previously
+CI
+```
+### Challenge 1
+Repeat the logistic regression above, but using gpa rather than gre as predictor variable
+- Is gpa significant predictor of odds of admission? yes
+```{r challenge 1 glm}
+glm <- glm(data = d, admit ~ gpa, family = "binomial")
+summary(glm)
+```
+
+- What is estimate of B1 and the 95% CI around that estimate? How much does an increase of 1 unit in gpa increase the actual odds ratio for admission? What is the 95% CI around this odds ratio?
+```{r challenge 1 b1 and ci}
+coeffs <- glm$coefficients; coeffs
+CI <- confint(glm, level = 0.95); CI
+ORchange <- exp(coeffs[2]); ORchange
+ORchangeCI <- exp(CI[2, ]); ORchangeCI
+```
+- Graph the probability of admission for students w/ GPAs between 2.0 and 4.0 GPAs
+```{r challenge 1 ggplot}
+x <- data.frame(gpa = seq(from = 2, to = 4, length.out = 100))
+prediction <- cbind(gpa = x, response = predict(glm, newdata = x, type = "response"))
+# IMPORTANT: Using type='response' returns predictions on the scale of our
+# Y variable, in this case Pr(admit); using the default for type would
+# return a prediction on the logit scale, i.e., the log(odds ratio), or
+# log(Pr(admit)/(1-Pr(admit)))
+head(prediction)
+p <- ggplot(prediction, aes(x = gpa, y = response)) + geom_line() + xlab("GPA") + ylab("Pr(admit)"); p
+
+prediction <- cbind(gpa = x, predict(glm, newdata = x, type = "response", se = TRUE))
+prediction$LL <- prediction$fit - 1.96 * prediction$se.fit
+prediction$UL <- prediction$fit + 1.96 * prediction$se.fit
+head(prediction)
+
+p <- ggplot(prediction, aes(x = gpa, y = fit)) + 
+        geom_ribbon(aes(ymin = LL, ymax = UL), alpha = 0.2) + 
+        geom_line() + xlab("GPA") + ylab("Pr(admit)") + 
+        geom_point(data = d, aes(x = gpa, y = admit)); p
+```
+
+### Likelihood ratio tests
+To evaluate the significance of an overall model in a logistic regression, we can compare the fit of a more complex model to that of a nested, reduced model, just as when we discussed model selection approaches for simple linear regression and used partial F tests.
+A likelihood ratio test comparing the full and reduced models can be performed using the anova() function with the additional argument test="Chisq".
+```{r likelihood}
+glm1 <- glm(data = d, admit ~ 1, family = "binomial")
+glm2 <- glm(data = d, admit ~ gpa, family = "binomial")
+anova(glm1, glm2, test = "Chisq")
+
+# or we can use the function lrtest() from the {lmtest} package
+lrtest(glm1, glm2)
+```
+
+## Multiple logistic regression
+Logistic regression can be easily extended to situations w/ multiple predictor variables, including both continuous and categorical variables, as in our discussion of multiple regression under the general linear model
+
+### Challenge 2
+Using the same “graddata.csv” dataset, run a multiple logistic regression analysis using gpa, gre, and rank to look at student admissions to graduate school. Do not, at first, include interaction terms.
+- What variables are significant predictors of log(odds ratio) of admission?
+```{r challenge 2 multiple regression}
+d$rank <- as.factor(d$rank)  # make sure rank is a categorical variable
+glmGGR <- glm(data = d, formula = admit ~ gpa + gre + rank, family = binomial)  # 3 predictor model
+summary(glmGGR)
+```
+
+- What is the value of the log(odds ratio) coefficient and the 95% CIs around that value for the 2 continuous variable (gpa and gre), when taking the effects of the other and of rank into account? What do these translate into on the actual odds ratio scale?
+```{r challenge 2 coefficients}
+coeff <- glmGGR$coefficients  # extract coefficients... all significantly different from 0
+coeffCI <- cbind(coeff, confint(glmGGR)); coeffCI  # and 95% CIs around them... none include 0
+ORcoeff <- exp(coeff); ORcoeff
+ORcoeffCI <- exp(coeffCI); ORcoeffCI
+```
+
+- Is the model including all 3 predictors better than models that include just 2 predictors?
+```{r challenge 2 compare models}
+glmGG <- glm(data = d, formula = admit ~ gpa + gre, family = binomial)
+glmGR <- glm(data = d, formula = admit ~ gpa + rank, family = binomial)
+glmRG <- glm(data = d, formula = admit ~ gre + rank, family = binomial)
+anova(glmGG, glmGGR, test = "Chisq")
+anova(glmGR, glmGGR, test = "Chisq")
+anova(glmRG, glmGGR, test = "Chisq")
+```
+
+- Compare a model that includes the 3 predictors with no interactions vs one that includes the 3 predictors and all possible interactions
+```{r challenge 2 compare models2}
+glmNO <- glm(data = d, admit ~ rank + gpa + gre, family = "binomial")
+glmALL <- glm(data = d, admit ~ rank * gpa * gre, family = "binomial")
+anova(glmNO, glmALL, test = "Chisq")  # adding interaction terms to model doesn't significantly decrease deviance
+```
+
+## Log linear or poisson regression
+What if we want to model a response variable with count data?
+- binomial counts: take values between 0 and n
+- poisson counts: have no upper bound
+
+Researchers studied the reproductive success of a set of male woolly monkeys over a period of 8 years. The age of each monkey at the beginning of the study and the number of successful matings they had during the 8 years were recorded, and they were also scored into ranks of “high”, “medium”, and “low”. We assume the number of matings follows a Poisson distribution, and we are interested in exploring whether mating success depends on the age of the monkey in question.
+**DOES MATING SUCCESS DEPEND ON THE MONKEY'S AGE**
+```{r log linear poisson regression}
+# load data
+f <- curl("https://raw.githubusercontent.com/fuzzyatelin/fuzzyatelin.github.io/master/AN588_Fall21/woollydata.csv")
+d <- read.csv(f, header = TRUE, sep = ",", stringsAsFactors = TRUE)
+head(d)
+summary(d) #residual deviance slightly higher than residual df, which suggests data slightly overdispersed
+
+# start w/ EDA
+par(mfrow = c(1, 1))
+p <- ggplot(data = d, aes(x = age, y = success)) + geom_point() + xlab("Age") + ylab("Mating Success"); p
+pairs(d)
+table(d$rank, d$success)
+
+# glm
+glm <- glm(data = d, success ~ age, family = "poisson")
+summary(glm)
+
+# other
+coeffs <- glm$coefficients; coeffs
+CIs <- confint(glm, level = 0.95); CIs  # uses ML approaches
+CIs <- confint(glm, level = 0.95); CIs  # uses standard errors
+
+# fit line of best fit through data, we want to plot relationship between success and age
+x <- data.frame(age = seq(from = 5, to = 17, length.out = 30))
+prediction <- cbind(age = x, predict(glm, newdata = x, type = "response", se = TRUE))
+# IMPORTANT: Using the argument type='response' makes our prediction be
+# units of our actual Y variable (success) rather than log(success)
+prediction$LL <- prediction$fit - 1.96 * prediction$se.fit
+prediction$UL <- prediction$fit + 1.96 * prediction$se.fit
+head(prediction)
+p <- p + geom_line(data = prediction, aes(x = age, y = fit)) + geom_ribbon(data = prediction,
+    aes(x = age, y = fit, ymin = LL, ymax = UL), alpha = 0.2) + xlab("Age") +
+    ylab("Mating Success"); p  # note the curvilinear 'line' of best fit
+
+# we can see that this model is better than an intercept only model by doing a likelihood ratio test
+glm1 <- glm(data = d, success ~ 1, family = "poisson")
+glm2 <- glm(data = d, success ~ age, family = "poisson")
+# using the anova function
+anova(glm1, glm2, test = "Chisq")
+
+# based on the deviance between a specified null and full models
+x2 <- glm1$deviance - glm2$deviance; x2
+
+p <- 1 - pchisq(x2, df = 1); p
+
+# based on hand calculating deviance for each model; logLik() function
+# returns the log-likelihood of a model
+Dglm1 = -2 * logLik(glm1); Dglm1
+Dglm2 = -2 * logLik(glm2); Dglm2
+x2 <- as.numeric(Dglm1 - Dglm2); x2
+p <- 1 - pchisq(x2, df = 1); p  # df = difference in number of parameters in the full verus reduced model
+```
+
+AIC is another way to evaluate and compare related models
+- for similar models, lower AIC models are preferred over those with higher AIC
+- AIC value is based on deviance associated with the model but it penalizes model complexity
+- AIC values are useful for comparing models but they are not interpretable on their own
+
+The logLik() function returns the log-likelihood associated with a particular model and can be used to calculate AIC values by hand
+```{r aic}
+# formula for AIC = 2 * # params estimated - 2 * log-likelihood of model; for this model we estimated 2 params
+AIC <- 2 * 2 - 2 * logLik(glm2); AIC  
+AICreduced <- 2 * 1 - 2 * logLik(glm1); AICreduced  # for this model, 1 param is estimated
+```
+
+### Challenge 3
+Using the woolly monkey mating success data set, explore multiple Poisson regression models of [a] mating success in relation to rank and [b] mating success in relation to age + rank (and their interaction) on your own. What conclusions can you come to about the importance of rank and rank in combination with age versus age alone?
+```{r challenge 3}
+# glm of success~age
+glm1 <- glm(data = d, success ~ rank, family = "poisson")
+summary(glm1)
+coeffs <- glm1$coefficients; coeffs
+CIs <- confint(glm1, level = 0.95); CIs
+
+# glm of success~age+rank
+glm2 <- glm(data = d, success ~ age + rank, family = "poisson")
+summary(glm2)
+coeffs <- glm2$coefficients; coeffs
+CIs <- confint(glm2, level = 0.95); CIs
+
+# glm of success~age+rank+age:rank
+glm3 <- glm(data = d, success ~ age * rank, family = "poisson")
+summary(glm3)
+coeffs <- glm3$coefficients; coeffs
+CIs <- confint(glm3, level = 0.95); CIs
+```
+
+
+
+
+
