@@ -1,0 +1,174 @@
+---
+title: "AN/BI 588: End-of-Semester Self Evaluation"
+author: "Sam Vee"
+date: "Dec 14, 2023"
+output: 
+  rmarkdown::html_document:
+    theme: cosmo
+---
+
+***
+
+### [Course Overview](https://fuzzyatelin.github.io/bioanth-stats/overview.html)
+### [Course Outline](https://fuzzyatelin.github.io/bioanth-stats/outline.html)
+### [Modules](https://fuzzyatelin.github.io/bioanth-stats/modules.html)
+### [Assignments](https://fuzzyatelin.github.io/bioanth-stats/assignments.html)
+### [Resources](https://fuzzyatelin.github.io/bioanth-stats/resources.html)
+### [Policies](https://fuzzyatelin.github.io/bioanth-stats/policies.html)
+### [Insurmountable Coding Problems](https://fuzzyatelin.github.io/bioanth-stats/studentproblems.html)
+
+***
+
+<center>
+
+<font size="+2"><b>Sashay... Away.</b></font></center><br>
+
+<center><p><img src="https://i.pinimg.com/originals/62/a5/9b/62a59b21963b12f47a4ea94d0f7c1bb8.gif" style="border:5px solid black"></p>
+</center><br>  
+
+<center>
+Many statistical concepts and tests that were previously hard for me to wrap my head around finally clicked throughout this course. Troubleshooting code was always frustrating but I learned the most through this process of trial and error; there was nothing more satisfying than finally understanding the code and getting it to work! Lastly, the peer review process was valuable for showing me how there are many different ways to achieve the final goal.
+</center>
+***
+
+## Instructions
+
+***
+
+Please download this Markdown file (`selfevaluation.Rmd`) from my GitHub site (in the `fuzzyatelin.github.io/bioanth-stats/` folder) and answer the appropriate questions in the spaces provided. Once you've knitted the final file, please *email* the **html** version of that file to me with the name `[LastF]_F19_SelfEvaluation.html` (with `LastF` meaning your last name followed by your first initial, i.e., mine would be called `SchmittC_F19_SelfEvaluation.html`). I must receive this file by **December 14, 2023** at the earliest, and by **Midnight of the Final Exam Date** at the latest.
+
+***
+
+### Overall Impression
+
+***
+
+In place of my name as author on this Markdown file, please insert your own, along with the date on which you completed this self-assessment. In place of the RuPaul GIF, above, please choose a GIF of a drag queen that best exemplifies your overall feelings about what you learned/accomplished in this course. Additionally, replace the `The following self evaluation...` text below your GIF with a three sentence summary of your experience in the class and what you take away from it to accompany that GIF. You may also choose a catchy title.
+
+***
+
+### What were you asked to do?
+
+***
+1. **Homework 1**: I created and cloned my GitHub repositories into R and also learned how to commit/push files directly to GitHub from RStudio. I worked with data structures and specifically created and extracted data from matrices and arrays, subsetted and filtered data, created nested hierarchical lists, and coerced data to be logical or factor valued. 
+<br>
+https://github.com/samanthavee/AN588-Week-2-svee/blob/main/svee_OriginalHomeworkCode_01.html
+<br><br>
+2. **Homework 2**: I calculated probabilities of hearing a specific number of titi monkey calls using the Poisson distribution. I plotted a Poisson mass function and simulated results from this distribution. 
+<br>
+https://github.com/samanthavee/AN588-Week-3-svee/blob/main/svee_OriginalHomeworkCode_02.html 
+<br><br>
+3. **Homework 3**: I used the zombie dataset to estimate the population mean, SD, and SE of specific variables such as height and weight. I visually explored the data through QQ plots, scatterplots, histograms, and boxplots. I also attempted to create a for loop to randomly sample a specific subset of survivors and estimated population mean, SD, and SE based on that. 
+<br>
+https://github.com/samanthavee/AN588_Zombies_svee/blob/master/svee_OriginalHomeworkCode_03.html 
+<br><br>
+4. **Homework 4**: I created an R function to perform one- and two-sample Z tests for proportion data. I also used the Kamilar and Cooper dataset to fit a linear regression model to predict longevity from species' brain size. 
+<br>
+https://github.com/samanthavee/AN588_Malfunction_svee/blob/master/svee_OriginalHomeworkCode_04.html 
+<br><br>
+5. **Homework 5**: I used the Kamilar and Cooepr dataset again to run a linear regression for home range and mean female body mass. I also used bootstrapping to estimate the standard errors and confidence intervals for this model. 
+<br>
+https://github.com/samanthavee/AN588_Boots_svee/blob/master/AN588_Boots_svee.html 
+<br><br>
+6. **Peer commentary**: For all of the above homework assignments, I provided peer commentary on a classmate's code.
+<br>
+https://github.com/jrerkens/AN588-Week-2-jrerkens/blob/main/jrerkens_PeerCommentary_svee_01.html <br>
+https://github.com/rhottensomers/AN588_Week_3_reesehs/blob/main/svee_PeerCommentary_reesehs_02.html <br>
+https://github.com/cattuccino/AN588-Zombies-cmetcalf/blob/main/cmetcalf_PeerCommentary_svee_03.html <br>
+https://github.com/sofimofii/AN588-Malfucation-weavers/blob/main/svee_PeerCommentary_weavers_04.html <br>
+https://github.com/EmileyGarciaZych/AN588_Boots_emileygz/blob/master/svee_PeerCommentary_emileygz_05.html 
+<br><br>
+7. **Homework edits**: I edited my original homework assignment based off peer commentary I received, which primarily involved adjusting incorrect code or improving my annotations.
+<br>
+https://github.com/samanthavee/AN588-Week-2-svee/blob/main/svee_FinalHomeworkCode_01.html <br>
+https://github.com/samanthavee/AN588-Week-3-svee/blob/main/svee_FinalHomeworkCode_02.html <br>
+https://github.com/samanthavee/AN588_Zombies_svee/blob/master/svee_FinalHomeworkCode_03.html <br>
+https://github.com/samanthavee/AN588_Malfunction_svee/blob/master/svee_FinalHomeworkCode_04.html <br>
+https://github.com/samanthavee/AN588_Boots_svee/blob/master/svee_FinalHomeworkCode_05.html 
+<br><br>
+8. **Weekly modules**: I worked through the assigned modules and took notes on them in preparation for class every week, all of which are in the repository linked below (I didn't knit the majority of these documents so I can't provide an html file). <br>
+https://github.com/samanthavee/AN588-Fall2023 
+<br><br>
+9. **R vignette**: I worked with Brooke, Bhavya, Nicole, and Jess to create an R vignette for social network analyses, using data from nonhuman primates. We pulled data from published papers and adjusted them to our vignette. My specific contribution to the vignette were moving contents from our outlined Google Doc to a .Rmd file, adding code for statistical analyses, annotating model summaries, and "prettifying" the overall .Rmd file. 
+<br>
+https://github.com/nmerullo/AN588_BonoboSpitChain/blob/main/AN588_BonoboSpitChain.html
+<br><br>
+10. **Data replication**: I completed the data replication assignment based on O'Connell et al. 2019, a paper that came out of my lab. I attempted to replicate analyses that were previously conducted in SPSS. More specifically, I replicated basic descriptive analyses (mean, median, mode), created a boxplot with ggplot2, and performed a GLMM with ordinal data.
+<br>
+https://github.com/samanthavee/svee-data-replication-assignment/blob/main/svee-AN588-data-replication.html
+<br><br>
+***
+
+### What did you accomplish?
+
+***
+
+I accomplished all of the above tasks mentioned. I completed the modules before coming into class every week. I returned all of my peer commentary in a timely manner and submitted final homework assignments by their due dates. The R vignette and data replication assignment were also submitted by or before their due dates.
+
+***
+
+### How well did you accomplish them?
+
+***
+
+Please let me know how well you feel you accomplished your tasks, in a general sense. What do you feel you did the best, and what did you do the least well? What was the hardest part for you? Did your work/understanding/ease improve over the course of the semester? <br><br>
+
+- I felt that I accomplished all of these tasks very well and to the best of my abilities. 
+- I felt I did the best in my homework submissions and the R vignette. For homework assignments, I made an effort to attempt all questions (even if I was confused about code, etc.) and annotated them as much as possible to make them helpful for my peer reviewer and my future self. Regarding the vignette, my group and I worked together really well and I am very happy with how it turned out both visually and content wise.
+- I felt I did the least well in competing the *final* homework submissions, particularly in cases when the peer commentary was unable to help me address problems I was running into with my code (e.g. making the function for HW 4). I could have managed my time better and attended office hours more frequently instead of waiting for the homework solution to be published to figure out where I went wrong.
+- The hardest part was the data replication assignment because it tested my ability to apply everything I learned throughout the semester. The steps seemed straightforward when reading the paper but I had a completely different experience once I actually started working with the data. I definitely learned along the way, but I had to go through many additional steps and ran into a lot of problems along the way. 
+- Overall I think I improved my understanding/ease of R and statistics throughout the semester. 
+
+***
+
+### How has your understanding of and approach to statistics and project design changed since taking this course?
+
+***
+
+I realized that there isn't a single "correct" way (to an extent) to do statistics or analyze a dataset. Reviewing code from classmates showed me how it's possible to come to the same conclusion through different methods. Jimmy's vignette on Bayesian statistics was really eye-opening and showed me how we can also interpret data in terms of probability instead of relying on p-values. Working through my data replication assignment and troubleshooting with you in our individual meetings also highlighted the lack of a single correct to do things. Instead, your ability to justify your decisions when analyzing data are arguably more important. As I work towards submitting my MA thesis for publication, I will be particularly mindful of how I describe my methods and statistical analyses. As I also work towards developing my dissertation project, I will also be mindful about what type of data I am collecting and what statistical tests are most appropriate for them (considering sample size, whether test assumptions are being met, etc.). 
+
+***
+
+### What did you learn from all this?
+
+***
+
+Please name at least three things you feel you learned in this course. <br><br>
+1. This seems minor but learning how to organize/annotate code in R markdown is genuinely one of the most helpful things I learned from this course. I revisited code from my MA research when putting together my guest lecture earlier in the semester and ended up spending hours trying to remember where a specific line of code was because everything was so disorganized. <br>
+2. dplyr is incredibly helpful for manipulating data and I ended up using it far more than I expected throughout the course. I used to make separate .csv files every time I needed to subset a specific part of my dataset! <br>
+3. I gained a better understanding of how to interpet the outputs of tests/models in R. Instead of solely focusing on p-values, I feel more comfortable interpreting other components like residuals, variance, confidence intervals, etc.
+
+***
+
+### What did your learn about teamwork in this course? How did the readings on teamwork foster this understanding? How did the teamwork experiences?
+
+***
+
+I learned the importance of setting expectations and roles when working in teams. When working on the vignette, my group quickly realized that it would be incredibly difficult for 5 people to simultaneously work on a single .Rmd file without creating multiple branches in GitHub. Once we established roles and deadlines for each other, we were able to work really well together and complete the vignette efficiently. The readings on teamwork were also particularly helpful for providing peer commentary. It's easier for me to pick at things and point out what can be improved but the readings reminded me why providing positive feedback is equally valuable. I took note of positive comments I received in my own code (e.g. good annotations) and tried to apply them to future assignments. 
+
+***
+
+### How did the Peer Commentary process and Group Project relate, if at all, to what you view as your successes or difficulties in this course?
+
+***
+
+The peer commentary process was largely helpful for helping me understand how to improve my code. However, it was difficult for me to improve my code or learn alternative solutions 1) when my peer was also running into the same issues as me or 2) when I ran into additional coding problems after the peer commentary. For example, Cat and I both struggled with creating a for-loop to answer the last question in Homework 3 and we ended up using a longer, alternative method. After Homework 4's peer commentary, I also found more problems with my function that I was unable to address on my own by the deadline. <br><br>
+The vignette was one my greatest successes because of how well my group worked together. I think this largely stems from the fact that we had different levels of experience with the topic. Brooke and Bhavya had previous experience working with social network data so they were able to teach the rest of us. Our (Nicole, Jess, and I) lack of experience was also helpful for identifying topics that needed further detail/clarification.
+
+***
+
+### What, if anything, of lasting value do you take away from this experience? If nothing, what would you do differently if you were to start over in this course? 
+
+***
+
+One of my biggest insecurities coming into a PhD program was my limited understanding of statistics. Prior to AN588, I took one statistics course as an undergrad (that I didn't retain much from) and another one as a MA student (that mostly became a course about meta-analysis, the professor's specialty). After this course, I feel much more confident in my coding and statistics abilities. I enjoyed coding far more than I previously did and I think a lot of that comes from the fact that I am now much more comfortable working with data in R. I still have a lot to learn but instead of feeling afraid and overwhelmed by statistics, I am actually looking forward to learning and practicing more on my own.
+
+***
+
+### Taking this self-assessment into account (and with **A** being the highest), if you were the instructor, what grade would you give yourself given your evaluation of your own performance this semester? Please be honest.
+
+***
+
+<br><center>A</center><br>
+
+***
